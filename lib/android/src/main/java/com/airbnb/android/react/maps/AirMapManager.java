@@ -262,7 +262,7 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
         duration = args.getInt(1);
         lng = region.getDouble("longitude");
         lat = region.getDouble("latitude");
-        view.animateToCoordinate(new LatLng(lat, lng), duration);
+        view.animateToCoordinate(new LatLng(lat, lng), duration, args.getMap(2));
         break;
 
       case ANIMATE_TO_VIEWING_ANGLE:
