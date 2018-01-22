@@ -73,7 +73,7 @@ declare module "react-native-maps" {
         animateToCoordinate(latLng: LatLng, duration?: number): void;
         animateToBearing(bearing: number, duration?: number): void;
         animateToViewingAngle(angle: number, duration?: number): void;
-        fitToElements(animated: boolean): void;
+        fitToElements(animated: boolean, duration?: number): void;
         fitToSuppliedMarkers(markers: string[], animated: boolean): void;
         fitToCoordinates(coordinates?: LatLng[], options?:{}): void;
         setMapBoundaries(northEast: LatLng, southWest: LatLng): void;

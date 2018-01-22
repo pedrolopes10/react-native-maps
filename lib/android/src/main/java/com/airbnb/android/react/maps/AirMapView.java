@@ -610,7 +610,7 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     map.setPadding(0, 0, 0, 0);
   }
 
-  public void fitToElements(boolean animated) {
+  public void fitToElements(boolean animated, int duration) {
     if (map == null) return;
 
     LatLngBounds.Builder builder = new LatLngBounds.Builder();
@@ -629,7 +629,11 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
       LatLngBounds bounds = builder.build();
       CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, baseMapPadding);
       if (animated) {
-        map.animateCamera(cu);
+          if (duration !== 0) {
+            map.animateCamera(cu, duration, null);
+          } else {
+            map.animateCamera(cu);
+          }
       } else {
         map.moveCamera(cu);
       }
