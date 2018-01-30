@@ -69,8 +69,8 @@ declare module "react-native-maps" {
     export default class MapView extends React.Component<MapViewProps, any> {
         static Animated: any;
         static AnimatedRegion: any;
-        animateToRegion(region: Region, duration?: number): void;
-        animateToCoordinate(latLng: LatLng, duration?: number): void;
+        animateToRegion(region: Region, duration?: number, options?:{}): void;
+        animateToCoordinate(latLng: LatLng, duration?: number, options?:{}): void;
         animateToBearing(bearing: number, duration?: number): void;
         animateToViewingAngle(angle: number, duration?: number): void;
         fitToElements(animated: boolean, duration?: number): void;

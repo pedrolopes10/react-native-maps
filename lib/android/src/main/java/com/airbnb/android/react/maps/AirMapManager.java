@@ -254,7 +254,7 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
             new LatLng(lat - latDelta / 2, lng - lngDelta / 2), // southwest
             new LatLng(lat + latDelta / 2, lng + lngDelta / 2)  // northeast
         );
-        view.animateToRegion(bounds, duration);
+        view.animateToRegion(bounds, duration, args.getMap(2));
         break;
 
       case ANIMATE_TO_COORDINATE:

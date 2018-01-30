@@ -63,7 +63,7 @@ To access event data, you will need to use `e.nativeEvent`. For example, `onPres
 
 | Method Name | Arguments | Notes
 |---|---|---|
-| `animateToRegion` | `region: Region`, `duration: Number` |
+| `animateToRegion` | `region: Region`, `duration: Number`, `options: { edgePadding: EdgePadding, animated: Boolean }` |
 | `animateToCoordinate` | `coordinate: LatLng`, `duration: Number`, `options: { edgePadding: EdgePadding, animated: Boolean }` |
 | `animateToBearing` | `bearing: Number`, `duration: Number` |
 | `animateToViewingAngle` | `angle: Number`, `duration: Number` |
