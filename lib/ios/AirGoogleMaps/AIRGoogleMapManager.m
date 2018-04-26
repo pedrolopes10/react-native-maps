@@ -98,6 +98,42 @@ RCT_EXPORT_METHOD(animateToRegion:(nonnull NSNumber *)reactTag
   }];
 }
 
+RCT_EXPORT_METHOD(animateToRegion:(nonnull NSNumber *)reactTag
+                  withRegion:(MKCoordinateRegion)region
+                  withDuration:(CGFloat)duration
+                  edgePadding:(NSDictionary *)edgePadding)
+{
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+        id view = viewRegistry[reactTag];
+        if (![view isKindOfClass:[AIRGoogleMap class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting AIRGoogleMap, got: %@", view);
+        } else {
+            // Core Animation must be used to control the animation's duration
+            // See http://stackoverflow.com/a/15663039/171744
+            
+            AIRGoogleMap *mapView = (AIRGoogleMap *)view;
+            GMSCameraPosition *camera = [AIRGoogleMap makeGMSCameraPositionFromMap:mapView andMKCoordinateRegion:region];
+            
+            [CATransaction begin];
+            [CATransaction setAnimationDuration:duration/1000];
+            
+            if (edgePadding != nil) {
+                CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]];
+                CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]];
+                CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]];
+                CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]];
+                
+                [view setPadding:UIEdgeInsetsMake(top, left, bottom, right)];
+            }
+            
+            [mapView animateToCameraPosition:camera];
+            [view setPadding:UIEdgeInsetsZero];
+            
+            [CATransaction commit];
+        }
+    }];
+}
+
 RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
                   withRegion:(CLLocationCoordinate2D)latlng
                   withDuration:(CGFloat)duration)
@@ -113,6 +149,36 @@ RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
       [CATransaction commit];
     }
   }];
+}
+
+RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
+                  withRegion:(CLLocationCoordinate2D)latlng
+                  withDuration:(CGFloat)duration
+                  edgePadding:(NSDictionary *)edgePadding)
+{
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+        id view = viewRegistry[reactTag];
+        if (![view isKindOfClass:[AIRGoogleMap class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting AIRGoogleMap, got: %@", view);
+        } else {
+            [CATransaction begin];
+            
+            if (edgePadding != nil) {
+                CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]];
+                CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]];
+                CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]];
+                CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]];
+                
+                [view setPadding:UIEdgeInsetsMake(top, left, bottom, right)];
+            }
+            
+            [CATransaction setAnimationDuration:duration/1000];
+            [(AIRGoogleMap *)view animateToLocation:latlng];
+            [view setPadding:UIEdgeInsetsZero];
+            
+            [CATransaction commit];
+        }
+    }];
 }
 
 RCT_EXPORT_METHOD(animateToViewingAngle:(nonnull NSNumber *)reactTag
@@ -170,6 +236,32 @@ RCT_EXPORT_METHOD(fitToElements:(nonnull NSNumber *)reactTag
       [mapView animateWithCameraUpdate:[GMSCameraUpdate fitBounds:bounds withPadding:55.0f]];
     }
   }];
+}
+
+RCT_EXPORT_METHOD(fitToElements:(nonnull NSNumber *)reactTag
+                  animated:(BOOL)animated
+                  withDuration:(CGFloat)duration)
+{
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+        id view = viewRegistry[reactTag];
+        if (![view isKindOfClass:[AIRGoogleMap class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting AIRGoogleMap, got: %@", view);
+        } else {
+            AIRGoogleMap *mapView = (AIRGoogleMap *)view;
+            CLLocationCoordinate2D myLocation = ((AIRGoogleMapMarker *)(mapView.markers.firstObject)).realMarker.position;
+            GMSCoordinateBounds *bounds = [[GMSCoordinateBounds alloc] initWithCoordinate:myLocation coordinate:myLocation];
+
+            [CATransaction begin];
+            [CATransaction setAnimationDuration:duration/1000];
+            
+            for (AIRGoogleMapMarker *marker in mapView.markers) {
+                bounds = [bounds includingCoordinate:marker.realMarker.position];
+            }
+            
+            [mapView animateWithCameraUpdate:[GMSCameraUpdate fitBounds:bounds withPadding:55.0f]];
+            [CATransaction commit];
+        }
+    }];
 }
 
 RCT_EXPORT_METHOD(fitToSuppliedMarkers:(nonnull NSNumber *)reactTag
