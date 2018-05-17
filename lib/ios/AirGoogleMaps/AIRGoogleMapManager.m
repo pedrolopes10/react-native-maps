@@ -62,6 +62,7 @@ RCT_EXPORT_VIEW_PROPERTY(showsMyLocationButton, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(showsIndoorLevelPicker, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(customMapStyleString, NSString)
 RCT_EXPORT_VIEW_PROPERTY(mapPadding, UIEdgeInsets)
+RCT_REMAP_VIEW_PROPERTY(paddingAdjustmentBehavior, paddingAdjustmentBehaviorString, NSString)
 RCT_EXPORT_VIEW_PROPERTY(onMapReady, RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onKmlReady, RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onPress, RCTBubblingEventBlock)
@@ -390,7 +391,8 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)reactTag
 
 RCT_EXPORT_METHOD(pointForCoordinate:(nonnull NSNumber *)reactTag
                   coordinate:(NSDictionary *)coordinate
-                  withCallback:(RCTResponseSenderBlock)callback)
+                  resolver: (RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 {
   CLLocationCoordinate2D coord =
   CLLocationCoordinate2DMake(
@@ -407,17 +409,18 @@ RCT_EXPORT_METHOD(pointForCoordinate:(nonnull NSNumber *)reactTag
       
       CGPoint touchPoint = [mapView.projection pointForCoordinate:coord];
       
-      callback(@[[NSNull null], @{
-                   @"x": @(touchPoint.x),
-                   @"y": @(touchPoint.y),
-                   }]);
+      resolve(@{
+                @"x": @(touchPoint.x),
+                @"y": @(touchPoint.y),
+                });
     }
   }];
 }
 
 RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
                   point:(NSDictionary *)point
-                  withCallback:(RCTResponseSenderBlock)callback)
+                  resolver: (RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 {
   CGPoint pt = CGPointMake(
                            [point[@"x"] doubleValue],
@@ -433,10 +436,10 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
       
       CLLocationCoordinate2D coordinate = [mapView.projection coordinateForPoint:pt];
       
-      callback(@[[NSNull null], @{
+      resolve(@{
                 @"latitude": @(coordinate.latitude),
                 @"longitude": @(coordinate.longitude),
-                }]);
+                });
     }
   }];
 }
