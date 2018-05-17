@@ -1,3 +1,5 @@
+import {EdgePadding} from "react-native-maps";
+
 declare module "react-native-maps" {
 
     import * as React from 'react';
@@ -219,7 +221,7 @@ declare module "react-native-maps" {
         animateToCoordinate(latLng: LatLng, duration?: number): void;
         animateToBearing(bearing: number, duration?: number): void;
         animateToViewingAngle(angle: number, duration?: number): void;
-        fitToElements(animated: boolean): void;
+        fitToElements(animated: boolean, duration?: number, options?: { edgePadding?: EdgePadding}): void;
         fitToSuppliedMarkers(markers: string[], animated: boolean): void;
         fitToCoordinates(coordinates?: LatLng[], options?: { edgePadding?: EdgePadding, animated?: boolean }): void;
         setMapBoundaries(northEast: LatLng, southWest: LatLng): void;

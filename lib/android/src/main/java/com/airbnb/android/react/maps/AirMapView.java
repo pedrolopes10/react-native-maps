@@ -655,8 +655,13 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     map.setPadding(0, 0, 0, 0);
   }
 
-  public void fitToElements(boolean animated, int duration) {
+  public void fitToElements(boolean animated, int duration, ReadableMap edgePadding) {
     if (map == null) return;
+
+    if (edgePadding != null) {
+      map.setPadding(edgePadding.getInt("left"), edgePadding.getInt("top"),
+          edgePadding.getInt("right"), edgePadding.getInt("bottom"));
+    }
 
     LatLngBounds.Builder builder = new LatLngBounds.Builder();
 
@@ -683,6 +688,8 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
         map.moveCamera(cu);
       }
     }
+
+    map.setPadding(0, 0, 0, 0);
   }
 
   public void fitToSuppliedMarkers(ReadableArray markerIDsArray, boolean animated) {

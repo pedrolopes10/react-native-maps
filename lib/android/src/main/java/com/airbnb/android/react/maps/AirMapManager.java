@@ -286,7 +286,7 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
         break;
 
       case FIT_TO_ELEMENTS:
-        view.fitToElements(args.getBoolean(0), args.getInt(1));
+        view.fitToElements(args.getBoolean(0), args.getInt(1), args.getMap(2));
         break;
 
       case FIT_TO_SUPPLIED_MARKERS:
