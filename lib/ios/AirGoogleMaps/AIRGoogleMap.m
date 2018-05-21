@@ -95,9 +95,7 @@ id regionAsJSON(MKCoordinateRegion region) {
            };
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wobjc-missing-super-calls"
-- (void)insertReactSubview:(id<RCTComponent>)subview atIndex:(NSInteger)atIndex {
+- (void)addToMap:(id<RCTComponent>)subview {
   // Our desired API is to pass up markers/overlays as children to the mapview component.
   // This is where we intercept them and do the appropriate underlying mapview action.
   if ([subview isKindOfClass:[AIRGoogleMapMarker class]]) {
@@ -127,17 +125,13 @@ id regionAsJSON(MKCoordinateRegion region) {
   } else {
     NSArray<id<RCTComponent>> *childSubviews = [subview reactSubviews];
     for (int i = 0; i < childSubviews.count; i++) {
-      [self insertReactSubview:(UIView *)childSubviews[i] atIndex:atIndex];
+      [self addToMap:childSubviews[i]];
     }
   }
-  [_reactSubviews insertObject:(UIView *)subview atIndex:(NSUInteger) atIndex];
 }
-#pragma clang diagnostic pop
 
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wobjc-missing-super-calls"
-- (void)removeReactSubview:(id<RCTComponent>)subview {
+- (void)removeFromMap:(id<RCTComponent>)subview {
   // similarly, when the children are being removed we have to do the appropriate
   // underlying mapview action here.
   if ([subview isKindOfClass:[AIRGoogleMapMarker class]]) {
@@ -167,10 +161,30 @@ id regionAsJSON(MKCoordinateRegion region) {
   } else {
     NSArray<id<RCTComponent>> *childSubviews = [subview reactSubviews];
     for (int i = 0; i < childSubviews.count; i++) {
-      [self removeReactSubview:(UIView *)childSubviews[i]];
+      [self removeFromMap:childSubviews[i]];
     }
   }
   [_reactSubviews removeObject:(UIView *)subview];
+}
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wobjc-missing-super-calls"
+- (void)insertReactSubview:(id<RCTComponent>)subview atIndex:(NSInteger)atIndex {
+    // Our desired API is to pass up markers/overlays as children to the mapview component.
+    // This is where we intercept them and do the appropriate underlying mapview action.
+    [self addToMap:subview];
+    [_reactSubviews insertObject:(UIView *)subview atIndex:(NSUInteger) atIndex];
+}
+#pragma clang diagnostic pop
+
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wobjc-missing-super-calls"
+- (void)removeReactSubview:(id<RCTComponent>)subview {
+    // similarly, when the children are being removed we have to do the appropriate
+    // underlying mapview action here.
+    [self removeFromMap:subview];
+    [_reactSubviews removeObject:(UIView *)subview];
 }
 #pragma clang diagnostic pop
 
