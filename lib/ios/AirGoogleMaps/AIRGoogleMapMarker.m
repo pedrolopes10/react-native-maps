@@ -77,18 +77,25 @@ CGRect unionRect(CGRect a, CGRect b) {
 }
 
 - (void)iconViewInsertSubview:(UIView*)subview atIndex:(NSInteger)atIndex {
-  if (!_realMarker.iconView) {
-    _iconView = [[UIView alloc] init];
-    _realMarker.iconView = _iconView;
-  }
-  [_iconView insertSubview:subview atIndex:atIndex];
+//  if (!_realMarker.iconView) {
+//    _iconView = [[UIView alloc] init];
+//    _realMarker.iconView = _iconView;
+//  }
+//  [_iconView insertSubview:subview atIndex:atIndex];
+//    _realMarker.iconView = subview;
+    
+    
+//    UIView *testView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 50, 50)];
+//    testView.backgroundColor = UIColor.orangeColor;
+//    _realMarker.iconView = testView;
+    _realMarker.iconView = subview;
 }
 
 - (void)insertReactSubview:(id<RCTComponent>)subview atIndex:(NSInteger)atIndex {
   if ([subview isKindOfClass:[AIRGoogleMapCallout class]]) {
     self.calloutView = (AIRGoogleMapCallout *)subview;
   } else { // a child view of the marker
-    [self iconViewInsertSubview:(UIView*)subview atIndex:atIndex+1];
+    [self iconViewInsertSubview:(UIView*)subview atIndex:atIndex];
   }
   DummyView *dummySubview = [[DummyView alloc] initWithView:(UIView *)subview];
   [super insertReactSubview:(UIView*)dummySubview atIndex:atIndex];
@@ -190,71 +197,119 @@ CGRect unionRect(CGRect a, CGRect b) {
 
 - (void)setImageSrc:(NSString *)imageSrc
 {
-  _imageSrc = imageSrc;
-
-  if (_reloadImageCancellationBlock) {
-    _reloadImageCancellationBlock();
-    _reloadImageCancellationBlock = nil;
-  }
-
-  if (!_imageSrc) {
-    if (_iconImageView) [_iconImageView removeFromSuperview];
-    return;
-  }
-
-  if (!_iconImageView) {
-    // prevent glitch with marker (cf. https://github.com/airbnb/react-native-maps/issues/738)
-    UIImageView *empyImageView = [[UIImageView alloc] init];
-    _iconImageView = empyImageView;
-    [self iconViewInsertSubview:_iconImageView atIndex:0];
-  }
-
-  _reloadImageCancellationBlock = [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:_imageSrc]
-                                                                          size:self.bounds.size
-                                                                         scale:RCTScreenScale()
-                                                                       clipped:YES
-                                                                    resizeMode:RCTResizeModeCenter
-                                                                 progressBlock:nil
-                                                              partialLoadBlock:nil
-                                                               completionBlock:^(NSError *error, UIImage *image) {
-                                                                 if (error) {
-                                                                   // TODO(lmr): do something with the error?
-                                                                   NSLog(@"%@", error);
-                                                                 }
-                                                                 dispatch_async(dispatch_get_main_queue(), ^{
-
-                                                                   // TODO(gil): This way allows different image sizes
-                                                                   if (_iconImageView) [_iconImageView removeFromSuperview];
-
-                                                                   // ... but this way is more efficient?
-//                                                                   if (_iconImageView) {
-//                                                                     [_iconImageView setImage:image];
-//                                                                     return;
-//                                                                   }
-
-                                                                   UIImageView *imageView = [[UIImageView alloc] initWithImage:image];
-
-                                                                   // TODO: w,h or pixel density could be a prop.
-                                                                   float density = 1;
-                                                                   float w = image.size.width/density;
-                                                                   float h = image.size.height/density;
-                                                                   CGRect bounds = CGRectMake(0, 0, w, h);
-
-                                                                   imageView.contentMode = UIViewContentModeScaleAspectFit;
-                                                                   [imageView setFrame:bounds];
-
-                                                                   // NOTE: sizeToFit doesn't work instead. Not sure why.
-                                                                   // TODO: Doing it this way is not ideal because it causes things to reshuffle
-                                                                   //       when the image loads IF the image is larger than the UIView.
-                                                                   //       Shouldn't required images have size info automatically via RN?
-                                                                   CGRect selfBounds = unionRect(bounds, self.bounds);
-                                                                   [self setFrame:selfBounds];
-
-                                                                   _iconImageView = imageView;
-                                                                   [self iconViewInsertSubview:imageView atIndex:0];
-                                                                 });
-                                                               }];
+    
+    
+    if (!self.realMarker.icon) {
+        // prevent glitch with marker (cf. https://github.com/airbnb/react-native-maps/issues/738)
+        // change default marker icon to an empty image until the icon image is loaded:
+        self.realMarker.icon = [UIImage new];
+        self.realMarker.iconView = nil;
+    }
+    
+    _imageSrc = imageSrc;
+    
+    if (_reloadImageCancellationBlock) {
+        _reloadImageCancellationBlock();
+        _reloadImageCancellationBlock = nil;
+    }
+    
+    self.tracksViewChanges = YES;
+    
+    _reloadImageCancellationBlock = [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:_imageSrc]
+                                                                            size:self.bounds.size
+                                                                           scale:RCTScreenScale()
+                                                                         clipped:YES
+                                                                      resizeMode:RCTResizeModeCenter
+                                                                   progressBlock:nil
+                                                                partialLoadBlock:nil
+                                                                 completionBlock:^(NSError *error, UIImage *image) {
+                                                                     if (error) {
+                                                                         // TODO(lmr): do something with the error?
+                                                                         NSLog(@"%@", error);
+                                                                     }
+                                                                     dispatch_async(dispatch_get_main_queue(), ^{
+                                                                         self.realMarker.icon = image;
+                                                                         //self.realMarker.fakeMarker = self;
+                                                                         self.tracksViewChanges = NO;
+                                                                     });
+                                                                 }];
 }
+
+//- (void)setImageSrc:(NSString *)imageSrc
+//{
+//  _imageSrc = imageSrc;
+//
+//  if (_reloadImageCancellationBlock) {
+////    _reloadImageCancellationBlock();
+//    _reloadImageCancellationBlock = nil;
+//  }
+//
+//  if (!_imageSrc) {
+//    if (_iconImageView) [_iconImageView removeFromSuperview];
+//    return;
+//  }
+//
+//  if (!_iconImageView) {
+//    // prevent glitch with marker (cf. https://github.com/airbnb/react-native-maps/issues/738)
+//    UIImageView *emptyImageView = [[UIImageView alloc] init];
+//
+//      emptyImageView.backgroundColor = UIColor.redColor;
+//
+//
+//    _iconImageView = emptyImageView;
+//    [self iconViewInsertSubview:_iconImageView atIndex:0];
+//  
+//
+//  _reloadImageCancellationBlock = [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:_imageSrc]
+//                                                                          size:self.bounds.size
+//                                                                         scale:RCTScreenScale()
+//                                                                       clipped:YES
+//                                                                    resizeMode:RCTResizeModeCenter
+//                                                                 progressBlock:nil
+//                                                              partialLoadBlock:nil
+//                                                               completionBlock:^(NSError *error, UIImage *image) {
+//                                                                 if (error) {
+//                                                                   // TODO(lmr): do something with the error?
+//                                                                   NSLog(@"%@", error);
+//                                                                 }
+//                                                                 dispatch_async(dispatch_get_main_queue(), ^{
+//
+//                                                                   // TODO(gil): This way allows different image sizes
+//                                                                   if (_iconImageView) [_iconImageView removeFromSuperview];
+//
+//                                                                   // ... but this way is more efficient?
+////                                                                   if (_iconImageView) {
+////                                                                     [_iconImageView setImage:image];
+////                                                                     return;
+////                                                                   }
+//
+//                                                                   UIImageView *imageView = [[UIImageView alloc] initWithImage:image];
+//
+//                                                                   // TODO: w,h or pixel density could be a prop.
+//                                                                   float density = 1;
+//                                                                   float w = image.size.width/density;
+//                                                                   float h = image.size.height/density;
+//                                                                   CGRect bounds = CGRectMake(0, 0, w, h);
+//
+//                                                                   imageView.contentMode = UIViewContentModeScaleAspectFit;
+//                                                                   [imageView setFrame:bounds];
+//
+//                                                                   // NOTE: sizeToFit doesn't work instead. Not sure why.
+//                                                                   // TODO: Doing it this way is not ideal because it causes things to reshuffle
+//                                                                   //       when the image loads IF the image is larger than the UIView.
+//                                                                   //       Shouldn't required images have size info automatically via RN?
+//                                                                   CGRect selfBounds = unionRect(bounds, self.bounds);
+//                                                                   [self setFrame:selfBounds];
+//
+//                                                                     imageView.backgroundColor = UIColor.yellowColor;
+//
+//                                                                   _iconImageView = imageView;
+//                                                                   [self iconViewInsertSubview:imageView atIndex:0];
+//                                                                 });
+//                                                               }];
+//
+//    _reloadImageCancellationBlock();
+//}
 
 - (void)setTitle:(NSString *)title {
   _realMarker.title = [title copy];
