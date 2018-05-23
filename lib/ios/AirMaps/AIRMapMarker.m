@@ -19,6 +19,7 @@ NSInteger const CALLOUT_OPEN_ZINDEX_BASELINE = 999;
 @implementation AIREmptyCalloutBackgroundView
 bool _calloutIsOpen = NO;
 NSInteger _zIndexBeforeOpen = 0;
+CGFloat _rotation = 0.0;
 @end
 
 @implementation AIRMapMarker {
@@ -267,6 +268,21 @@ NSInteger _zIndexBeforeOpen = 0;
 - (void)setOpacity:(double)opacity
 {
   [self setAlpha:opacity];
+}
+
+- (void)setRotation:(CLLocationDegrees)rotation {
+    // convert degrees to radians
+    _rotation = rotation * M_PI / 180.0;
+    
+    RCTAssertMainQueue();
+    
+//    [UIView animateWithDuration:0.15 animations:^{
+        self.transform = CGAffineTransformMakeRotation(_rotation);
+//    }];
+}
+
+- (CLLocationDegrees)rotation {
+    return _rotation;
 }
 
 - (void)setImageSrc:(NSString *)imageSrc
