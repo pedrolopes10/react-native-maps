@@ -627,7 +627,7 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
 
 #pragma mark Polyline stuff
 
-- (MKOverlayRenderer *)mapView:(MKMapView *)mapView rendererForOverlay:(id <MKOverlay>)overlay{
+- (MKOverlayRenderer *)mapView:(MKMapView *)mapView rendererForOverlay:(id <MKOverlay>)overlay {
     if ([overlay isKindOfClass:[AIRMapPolyline class]]) {
         return ((AIRMapPolyline *)overlay).renderer;
     } else if ([overlay isKindOfClass:[AIRMapPolygon class]]) {

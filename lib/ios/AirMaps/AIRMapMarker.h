@@ -18,9 +18,11 @@
 #import "SMCalloutView.h"
 #import "RCTConvert+AirMap.h"
 
+#import "AnnotationView.h"
+
 @class RCTBridge;
 
-@interface AIRMapMarker : MKAnnotationView <MKAnnotation>
+@interface AIRMapMarker : AnnotationView <MKAnnotation>
 
 @property (nonatomic, strong) AIRMapCallout *calloutView;
 @property (nonatomic, weak) AIRMap *map;
