@@ -21,7 +21,7 @@
 
 /// no-op accessor for setting the zPosition
 - (void)setZPosition:(CGFloat)zPosition {
-    if ([NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){11,0,0}]) {
+    if (@available(iOS 11, *)) {
         // do nothing
     } else {
         [super setZPosition:zPosition];
@@ -33,7 +33,7 @@
 }
 
 - (void)setStickyZPosition:(CGFloat)stickyZPosition {
-    if ([NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){11,0,0}]) {
+    if (@available(iOS 11, *)) {
         super.zPosition = stickyZPosition;
     } else {
         // do nothing
@@ -54,7 +54,7 @@
 
 /// Override the layer factory for this class to return a custom CALayer class
 + (Class)layerClass {
-    if ([NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){11,0,0}]) {
+    if (@available(iOS 11, *)) {
         return ZPositionableLayer.class;
     } else {
         return [super layerClass];
