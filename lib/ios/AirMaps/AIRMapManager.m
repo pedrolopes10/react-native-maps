@@ -145,6 +145,16 @@ RCT_EXPORT_METHOD(animateToRegion:(nonnull NSNumber *)reactTag
     }];
 }
 
+
+RCT_EXPORT_METHOD(animateToRegion:(nonnull NSNumber *)reactTag
+                  withRegion:(MKCoordinateRegion)region
+                  withDuration:(CGFloat)duration
+                  edgePadding:(NSDictionary *)edgePadding)
+{
+    [self animateToRegion:reactTag withRegion:region withDuration:duration];
+}
+
+
 RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
         withRegion:(CLLocationCoordinate2D)latlng
         withDuration:(CGFloat)duration)
@@ -164,6 +174,16 @@ RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
         }
     }];
 }
+
+
+RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
+                  withRegion:(CLLocationCoordinate2D)latlng
+                  withDuration:(CGFloat)duration
+                  edgePadding:(NSDictionary *)edgePadding)
+{
+    [self animateToCoordinate:reactTag withRegion:latlng withDuration:duration];
+}
+
 
 RCT_EXPORT_METHOD(animateToViewingAngle:(nonnull NSNumber *)reactTag
                   withAngle:(double)angle
@@ -223,6 +243,15 @@ RCT_EXPORT_METHOD(fitToElements:(nonnull NSNumber *)reactTag
         }
     }];
 }
+
+
+RCT_EXPORT_METHOD(fitToElements:(nonnull NSNumber *)reactTag
+                  animated:(BOOL)animated
+                  withDuration:(CGFloat)duration)
+{
+    [self fitToElements:reactTag animated:animated];
+}
+
 
 RCT_EXPORT_METHOD(fitToSuppliedMarkers:(nonnull NSNumber *)reactTag
                   markers:(nonnull NSArray *)markers
