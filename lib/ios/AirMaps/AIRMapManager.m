@@ -236,13 +236,20 @@ RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
                 CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]] / devicePixelsPerPoint;
                 UIEdgeInsets insets = UIEdgeInsetsMake(top, left, bottom, right);
 
-                MKCoordinateRegion region = mapView.region;
-                region.center = latlng;
-                MKMapRect newMapRect = [self MKMapRectForCoordinateRegion:region];
-                
-                [UIView animateWithDuration:timeInterval animations:^{
-                    [mapView setVisibleMapRect:newMapRect edgePadding:insets animated:YES];
-                }];
+                // Animation in s steps without using the "MKMapRectForCoordinateRegion" method.
+                [UIView animateWithDuration:timeInterval/2
+                                 animations:^{
+                                     [mapView setCenterCoordinate:latlng];
+                                 }
+                                 completion:^(BOOL finished) {
+                                     MKMapRect newVisibleMapRect = [mapView mapRectThatFits:mapView.visibleMapRect
+                                                                                edgePadding:insets];
+                                     
+                                     [UIView animateWithDuration:timeInterval/2 animations:^{
+                                         [mapView setVisibleMapRect:newVisibleMapRect animated:YES];
+                                     }];
+                                 }
+                 ];
             } else {
                 MKCoordinateRegion region;
                 region.span = mapView.region.span;
