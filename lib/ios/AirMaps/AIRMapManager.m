@@ -145,15 +145,53 @@ RCT_EXPORT_METHOD(animateToRegion:(nonnull NSNumber *)reactTag
     }];
 }
 
+// https://stackoverflow.com/questions/9270268/convert-mkcoordinateregion-to-mkmaprect
+- (MKMapRect)MKMapRectForCoordinateRegion:(MKCoordinateRegion)region
+{
+    MKMapPoint a = MKMapPointForCoordinate(CLLocationCoordinate2DMake(
+                                                                      region.center.latitude + region.span.latitudeDelta / 2,
+                                                                      region.center.longitude - region.span.longitudeDelta / 2));
+    
+    MKMapPoint b = MKMapPointForCoordinate(CLLocationCoordinate2DMake(
+                                                                      region.center.latitude - region.span.latitudeDelta / 2,
+                                                                      region.center.longitude + region.span.longitudeDelta / 2));
+    
+    return MKMapRectMake(MIN(a.x,b.x), MIN(a.y,b.y), ABS(a.x-b.x), ABS(a.y-b.y));
+}
 
 RCT_EXPORT_METHOD(animateToRegion:(nonnull NSNumber *)reactTag
                   withRegion:(MKCoordinateRegion)region
                   withDuration:(CGFloat)duration
                   edgePadding:(NSDictionary *)edgePadding)
 {
-    [self animateToRegion:reactTag withRegion:region withDuration:duration];
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+        id view = viewRegistry[reactTag];
+        if (![view isKindOfClass:[AIRMap class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting AIRMap, got: %@", view);
+        } else {
+            AIRMap *mapView = (AIRMap *)view;
+            NSTimeInterval timeInterval = duration/1000;    // seconds
+            
+            if (edgePadding.count > 0) {
+                CGFloat devicePixelsPerPoint = UIScreen.mainScreen.scale;
+                CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]] / devicePixelsPerPoint;
+                CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]] / devicePixelsPerPoint;
+                CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]] / devicePixelsPerPoint;
+                CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]] / devicePixelsPerPoint;
+                UIEdgeInsets insets = UIEdgeInsetsMake(top, left, bottom, right);
+                MKMapRect newMapRect = [self MKMapRectForCoordinateRegion:region];
+                
+                [UIView animateWithDuration:timeInterval animations:^{
+                    [mapView setVisibleMapRect:newMapRect edgePadding:insets animated:YES];
+                }];
+            } else {
+                [UIView animateWithDuration:timeInterval animations:^{
+                    [mapView setRegion:region animated:YES];
+                }];
+            }
+        }
+    }];
 }
-
 
 RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
         withRegion:(CLLocationCoordinate2D)latlng
@@ -175,15 +213,63 @@ RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
     }];
 }
 
-
 RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
                   withRegion:(CLLocationCoordinate2D)latlng
                   withDuration:(CGFloat)duration
                   edgePadding:(NSDictionary *)edgePadding)
 {
-    [self animateToCoordinate:reactTag withRegion:latlng withDuration:duration];
-}
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+        id view = viewRegistry[reactTag];
+        if (![view isKindOfClass:[AIRMap class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting AIRMap, got: %@", view);
+        } else {
+            AIRMap *mapView = (AIRMap *)view;
+            NSTimeInterval timeInterval = duration/1000;    // seconds
+            
+            if (edgePadding.count > 0) {
+                CGFloat devicePixelsPerPoint = UIScreen.mainScreen.scale;
+                CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]] / devicePixelsPerPoint;
+                CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]] / devicePixelsPerPoint;
+                CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]] / devicePixelsPerPoint;
+                CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]] / devicePixelsPerPoint;
+                UIEdgeInsets insets = UIEdgeInsetsMake(top, left, bottom, right);
+                
+                // Animation in s steps without using the "MKMapRectForCoordinateRegion" method.
+//                [UIView animateWithDuration:timeInterval/2
+//                                 animations:^{
+//                                     [mapView setCenterCoordinate:latlng];
+//                                 }
+//                                 completion:^(BOOL finished) {
+//                                     MKMapRect newVisibleMapRect = [mapView mapRectThatFits:mapView.visibleMapRect
+//                                                                                edgePadding:insets];
+//
+//                                     [UIView animateWithDuration:timeInterval/2
+//                                                      animations:^{
+//                                                          [mapView setVisibleMapRect:newVisibleMapRect animated:YES];
+//                                                      }
+//                                      ];
+//                                 }
+//                 ];
 
+                MKCoordinateRegion region = mapView.region;
+                region.center = latlng;
+                MKMapRect newMapRect = [self MKMapRectForCoordinateRegion:region];
+                
+                [UIView animateWithDuration:timeInterval animations:^{
+                    [mapView setVisibleMapRect:newMapRect edgePadding:insets animated:YES];
+                }];
+            } else {
+                MKCoordinateRegion region;
+                region.span = mapView.region.span;
+                region.center = latlng;
+                
+                [AIRMap animateWithDuration:timeInterval animations:^{
+                    [mapView setRegion:region animated:YES];
+                }];
+            }
+        }
+    }];
+}
 
 RCT_EXPORT_METHOD(animateToViewingAngle:(nonnull NSNumber *)reactTag
                   withAngle:(double)angle
@@ -249,7 +335,22 @@ RCT_EXPORT_METHOD(fitToElements:(nonnull NSNumber *)reactTag
                   animated:(BOOL)animated
                   withDuration:(CGFloat)duration)
 {
-    [self fitToElements:reactTag animated:animated];
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+        id view = viewRegistry[reactTag];
+        if (![view isKindOfClass:[AIRMap class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting AIRMap, got: %@", view);
+        } else {
+            NSTimeInterval timeInterval = duration/1000;    // seconds
+            AIRMap *mapView = (AIRMap *)view;
+            
+            // TODO(lmr): we potentially want to include overlays here... and could concat the two arrays together.
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                [UIView animateWithDuration:timeInterval animations:^{
+                    [mapView showAnnotations:mapView.annotations animated:animated];
+                }];
+            });
+        }
+    }];
 }
 
 
