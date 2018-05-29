@@ -173,6 +173,7 @@ RCT_EXPORT_METHOD(animateToRegion:(nonnull NSNumber *)reactTag
             NSTimeInterval timeInterval = duration/1000;    // seconds
             
             if (edgePadding.count > 0) {
+                // Assuming that "edgePadding" values come in pixels from JS, so we convert them to points.
                 CGFloat devicePixelsPerPoint = UIScreen.mainScreen.scale;
                 CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]] / devicePixelsPerPoint;
                 CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]] / devicePixelsPerPoint;
@@ -227,29 +228,13 @@ RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
             NSTimeInterval timeInterval = duration/1000;    // seconds
             
             if (edgePadding.count > 0) {
+                // Assuming that "edgePadding" values come in pixels from JS, so we convert them to points.
                 CGFloat devicePixelsPerPoint = UIScreen.mainScreen.scale;
                 CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]] / devicePixelsPerPoint;
                 CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]] / devicePixelsPerPoint;
                 CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]] / devicePixelsPerPoint;
                 CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]] / devicePixelsPerPoint;
                 UIEdgeInsets insets = UIEdgeInsetsMake(top, left, bottom, right);
-                
-                // Animation in s steps without using the "MKMapRectForCoordinateRegion" method.
-//                [UIView animateWithDuration:timeInterval/2
-//                                 animations:^{
-//                                     [mapView setCenterCoordinate:latlng];
-//                                 }
-//                                 completion:^(BOOL finished) {
-//                                     MKMapRect newVisibleMapRect = [mapView mapRectThatFits:mapView.visibleMapRect
-//                                                                                edgePadding:insets];
-//
-//                                     [UIView animateWithDuration:timeInterval/2
-//                                                      animations:^{
-//                                                          [mapView setVisibleMapRect:newVisibleMapRect animated:YES];
-//                                                      }
-//                                      ];
-//                                 }
-//                 ];
 
                 MKCoordinateRegion region = mapView.region;
                 region.center = latlng;
