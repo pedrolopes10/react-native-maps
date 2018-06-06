@@ -18,9 +18,11 @@
 #import "SMCalloutView.h"
 #import "RCTConvert+AirMap.h"
 
+#import "AnnotationView.h"
+
 @class RCTBridge;
 
-@interface AIRMapMarker : MKAnnotationView <MKAnnotation>
+@interface AIRMapMarker : AnnotationView <MKAnnotation>
 
 @property (nonatomic, strong) AIRMapCallout *calloutView;
 @property (nonatomic, weak) AIRMap *map;
@@ -33,6 +35,7 @@
 @property (nonatomic, assign) CLLocationCoordinate2D coordinate;
 @property (nonatomic, strong) UIColor *pinColor;
 @property (nonatomic, assign) NSInteger zIndex;
+@property (nonatomic, assign) CLLocationDegrees rotation;
 @property (nonatomic, assign) double opacity;
 
 @property (nonatomic, copy) RCTBubblingEventBlock onPress;

@@ -111,18 +111,20 @@ RCT_EXPORT_METHOD(animateToRegion:(nonnull NSNumber *)reactTag
         } else {
             // Core Animation must be used to control the animation's duration
             // See http://stackoverflow.com/a/15663039/171744
-            
+            NSTimeInterval timeInterval = duration/1000;    // seconds
             AIRGoogleMap *mapView = (AIRGoogleMap *)view;
             GMSCameraPosition *camera = [AIRGoogleMap makeGMSCameraPositionFromMap:mapView andMKCoordinateRegion:region];
             
             [CATransaction begin];
-            [CATransaction setAnimationDuration:duration/1000];
+            [CATransaction setAnimationDuration:timeInterval];
             
-            if (edgePadding != nil) {
-                CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]];
-                CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]];
-                CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]];
-                CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]];
+            if (edgePadding.count > 0) {
+                // Assuming that "edgePadding" values come in pixels from JS, so we convert them to points.
+                CGFloat devicePixelsPerPoint = UIScreen.mainScreen.scale;
+                CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]] / devicePixelsPerPoint;
+                CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]] / devicePixelsPerPoint;
+                CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]] / devicePixelsPerPoint;
+                CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]] / devicePixelsPerPoint;
                 
                 [view setPadding:UIEdgeInsetsMake(top, left, bottom, right)];
             }
@@ -162,18 +164,21 @@ RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
         if (![view isKindOfClass:[AIRGoogleMap class]]) {
             RCTLogError(@"Invalid view returned from registry, expecting AIRGoogleMap, got: %@", view);
         } else {
+            NSTimeInterval timeInterval = duration/1000;    // seconds
             [CATransaction begin];
             
-            if (edgePadding != nil) {
-                CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]];
-                CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]];
-                CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]];
-                CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]];
+            if (edgePadding.count > 0) {
+                // Assuming that "edgePadding" values come in pixels from JS, so we convert them to points.
+                CGFloat devicePixelsPerPoint = UIScreen.mainScreen.scale;
+                CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]] / devicePixelsPerPoint;
+                CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]] / devicePixelsPerPoint;
+                CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]] / devicePixelsPerPoint;
+                CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]] / devicePixelsPerPoint;
                 
                 [view setPadding:UIEdgeInsetsMake(top, left, bottom, right)];
             }
             
-            [CATransaction setAnimationDuration:duration/1000];
+            [CATransaction setAnimationDuration:timeInterval];
             [(AIRGoogleMap *)view animateToLocation:latlng];
             [view setPadding:UIEdgeInsetsZero];
             
@@ -248,12 +253,13 @@ RCT_EXPORT_METHOD(fitToElements:(nonnull NSNumber *)reactTag
         if (![view isKindOfClass:[AIRGoogleMap class]]) {
             RCTLogError(@"Invalid view returned from registry, expecting AIRGoogleMap, got: %@", view);
         } else {
+            NSTimeInterval timeInterval = duration/1000;    // seconds
             AIRGoogleMap *mapView = (AIRGoogleMap *)view;
             CLLocationCoordinate2D myLocation = ((AIRGoogleMapMarker *)(mapView.markers.firstObject)).realMarker.position;
             GMSCoordinateBounds *bounds = [[GMSCoordinateBounds alloc] initWithCoordinate:myLocation coordinate:myLocation];
 
             [CATransaction begin];
-            [CATransaction setAnimationDuration:duration/1000];
+            [CATransaction setAnimationDuration:timeInterval];
             
             for (AIRGoogleMapMarker *marker in mapView.markers) {
                 bounds = [bounds includingCoordinate:marker.realMarker.position];
