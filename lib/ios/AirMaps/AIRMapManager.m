@@ -171,18 +171,7 @@ RCT_EXPORT_METHOD(animateToRegion:(nonnull NSNumber *)reactTag
         } else {
             AIRMap *mapView = (AIRMap *)view;
             NSTimeInterval animationTime = duration/1000;    // seconds
-            UIEdgeInsets insets = UIEdgeInsetsZero;
-            
-            if (edgePadding.count > 0) {
-                // Assuming that "edgePadding" values come in pixels from JS, so we convert them to points.
-                CGFloat devicePixelsPerPoint = UIScreen.mainScreen.scale;
-                CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]] / devicePixelsPerPoint;
-                CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]] / devicePixelsPerPoint;
-                CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]] / devicePixelsPerPoint;
-                CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]] / devicePixelsPerPoint;
-                insets = UIEdgeInsetsMake(top, left, bottom, right);
-            }
-            
+            UIEdgeInsets insets = [self edgeInsetsFrom:edgePadding];
             MKCoordinateRegion newRegion = region;
             
             if (!UIEdgeInsetsEqualToEdgeInsets(insets, UIEdgeInsetsZero)) {
@@ -250,18 +239,7 @@ RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
         } else {
             AIRMap *mapView = (AIRMap *)view;
             NSTimeInterval animationTime = duration/1000;    // seconds
-            UIEdgeInsets insets = UIEdgeInsetsZero;
-            
-            if (edgePadding.count > 0) {
-                // Assuming that "edgePadding" values come in pixels from JS, so we convert them to points.
-                CGFloat devicePixelsPerPoint = UIScreen.mainScreen.scale;
-                CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]] / devicePixelsPerPoint;
-                CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]] / devicePixelsPerPoint;
-                CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]] / devicePixelsPerPoint;
-                CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]] / devicePixelsPerPoint;
-                insets = UIEdgeInsetsMake(top, left, bottom, right);
-            }
-            
+            UIEdgeInsets insets = [self edgeInsetsFrom:edgePadding];
             CLLocationCoordinate2D newCenter = latlng;
             
             if (!UIEdgeInsetsEqualToEdgeInsets(insets, UIEdgeInsetsZero)) {
@@ -1126,6 +1104,22 @@ static int kDragCenterContext;
     // create and return the lat/lng span
     MKCoordinateSpan span = MKCoordinateSpanMake(latitudeDelta, longitudeDelta);
     return span;
+}
+
+- (UIEdgeInsets)edgeInsetsFrom:(NSDictionary *)edgePadding {
+    UIEdgeInsets edgeInsets = UIEdgeInsetsZero;
+    
+    if (edgePadding.count > 0) {
+        // Assuming that "edgePadding" values come in pixels from JS, so we convert them to points.
+        CGFloat devicePixelsPerPoint = UIScreen.mainScreen.scale;
+        CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]] / devicePixelsPerPoint;
+        CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]] / devicePixelsPerPoint;
+        CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]] / devicePixelsPerPoint;
+        CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]] / devicePixelsPerPoint;
+        edgeInsets = UIEdgeInsetsMake(top, left, bottom, right);
+    }
+    
+    return edgeInsets;
 }
 
 #pragma mark -
