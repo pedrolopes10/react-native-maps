@@ -170,7 +170,8 @@ RCT_EXPORT_METHOD(animateToRegion:(nonnull NSNumber *)reactTag
             RCTLogError(@"Invalid view returned from registry, expecting AIRMap, got: %@", view);
         } else {
             AIRMap *mapView = (AIRMap *)view;
-            NSTimeInterval timeInterval = duration/1000;    // seconds
+            NSTimeInterval animationTime = duration/1000;    // seconds
+            UIEdgeInsets insets = UIEdgeInsetsZero;
             
             if (edgePadding.count > 0) {
                 // Assuming that "edgePadding" values come in pixels from JS, so we convert them to points.
@@ -179,17 +180,40 @@ RCT_EXPORT_METHOD(animateToRegion:(nonnull NSNumber *)reactTag
                 CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]] / devicePixelsPerPoint;
                 CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]] / devicePixelsPerPoint;
                 CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]] / devicePixelsPerPoint;
-                UIEdgeInsets insets = UIEdgeInsetsMake(top, left, bottom, right);
-                MKMapRect newMapRect = [self MKMapRectForCoordinateRegion:region];
-                
-                [UIView animateWithDuration:timeInterval animations:^{
-                    [mapView setVisibleMapRect:newMapRect edgePadding:insets animated:YES];
-                }];
-            } else {
-                [UIView animateWithDuration:timeInterval animations:^{
-                    [mapView setRegion:region animated:YES];
-                }];
+                insets = UIEdgeInsetsMake(top, left, bottom, right);
             }
+            
+            MKCoordinateRegion newRegion = region;
+            
+            if (!UIEdgeInsetsEqualToEdgeInsets(insets, UIEdgeInsetsZero)) {
+                CGPoint referencePoint = [mapView convertCoordinate:region.center toPointToView:mapView];
+                MKCoordinateRegion referenceConversionRegion = [mapView convertRect:CGRectMake(referencePoint.x, referencePoint.y, 0.5, 1) toRegionFromView:mapView];
+
+                newRegion.span.latitudeDelta += (insets.top + insets.bottom) * referenceConversionRegion.span.latitudeDelta;
+                newRegion.span.longitudeDelta += (insets.right + insets.left) * referenceConversionRegion.span.longitudeDelta;
+                newRegion.center.latitude += (insets.top - insets.bottom) * referenceConversionRegion.span.latitudeDelta/2;
+                newRegion.center.longitude += (insets.right - insets.left) * referenceConversionRegion.span.longitudeDelta/2;
+
+                if (newRegion.center.latitude > 90) {
+                    newRegion.center.latitude -= 180;
+                }
+                
+                if (newRegion.center.latitude < -90) {
+                    newRegion.center.latitude += 180;
+                }
+                
+                if (newRegion.center.longitude > 180) {
+                    newRegion.center.longitude -= 360;
+                }
+                
+                if (newRegion.center.longitude < -180) {
+                    newRegion.center.longitude += 360;
+                }
+            }
+            
+            [UIView animateWithDuration:animationTime animations:^{
+                [mapView setRegion:newRegion animated:YES];
+            }];
         }
     }];
 }
