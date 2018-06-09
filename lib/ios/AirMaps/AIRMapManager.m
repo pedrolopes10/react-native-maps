@@ -225,7 +225,7 @@ RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
             RCTLogError(@"Invalid view returned from registry, expecting AIRMap, got: %@", view);
         } else {
             AIRMap *mapView = (AIRMap *)view;
-            NSTimeInterval timeInterval = duration/1000;    // seconds
+            NSTimeInterval animationTime = duration/1000;    // seconds
             UIEdgeInsets insets = UIEdgeInsetsZero;
             
             if (edgePadding.count > 0) {
@@ -239,17 +239,16 @@ RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
             }
             
             CLLocationCoordinate2D newCenter = latlng;
-            CLLocationDegrees dxPadding = 0;
-            CLLocationDegrees dyPadding = 0;
             
             if (!UIEdgeInsetsEqualToEdgeInsets(insets, UIEdgeInsetsZero)) {
                 CGPoint referencePoint = [mapView convertCoordinate:latlng toPointToView:mapView];
-                MKCoordinateRegion referenceConversionRegion = [mapView convertRect:CGRectMake(referencePoint.x, referencePoint.y, 1, 1) toRegionFromView:mapView];
-                dxPadding = (insets.right - insets.left) * referenceConversionRegion.span.longitudeDelta/2;
-                dyPadding = (insets.top - insets.bottom) * referenceConversionRegion.span.latitudeDelta;
+                MKCoordinateRegion referenceConversionRegion = [mapView convertRect:CGRectMake(referencePoint.x, referencePoint.y, 0.5, 1) toRegionFromView:mapView];
                 
-                CLLocationDegrees newLatitude = latlng.latitude + dyPadding;
-                CLLocationDegrees newLongitude = latlng.longitude + dxPadding;
+                CLLocationDegrees latitudePadding = (insets.top - insets.bottom) * referenceConversionRegion.span.latitudeDelta;
+                CLLocationDegrees longitudePadding = (insets.right - insets.left) * referenceConversionRegion.span.longitudeDelta;
+                
+                CLLocationDegrees newLatitude = latlng.latitude + latitudePadding;
+                CLLocationDegrees newLongitude = latlng.longitude + longitudePadding;
                 
                 if (newLatitude > 90) {
                     newLatitude -= 180;
@@ -270,7 +269,7 @@ RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
                 newCenter = CLLocationCoordinate2DMake(newLatitude, newLongitude);
             }
             
-            [UIView animateWithDuration:timeInterval animations:^{
+            [UIView animateWithDuration:animationTime animations:^{
                 [mapView setCenterCoordinate:newCenter];
             }];
         }
