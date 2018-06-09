@@ -361,6 +361,38 @@ RCT_EXPORT_METHOD(fitToElements:(nonnull NSNumber *)reactTag
 }
 
 
+RCT_EXPORT_METHOD(fitToElements:(nonnull NSNumber *)reactTag
+                  animated:(BOOL)animated
+                  withDuration:(CGFloat)duration
+                  edgePadding:(NSDictionary *)edgePadding)
+{
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+        id view = viewRegistry[reactTag];
+        if (![view isKindOfClass:[AIRMap class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting AIRMap, got: %@", view);
+        } else {
+            AIRMap *mapView = (AIRMap *)view;
+            NSTimeInterval timeInterval = duration/1000;    // seconds
+            UIEdgeInsets insets = [self edgeInsetsFrom:edgePadding];
+            
+            // TODO(lmr): we potentially want to include overlays here... and could concat the two arrays together.
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                [UIView animateWithDuration:timeInterval/3*2
+                                 animations:^{
+                                     [mapView showAnnotations:mapView.annotations animated:animated];
+                                 }
+                                 completion:^(BOOL finished) {
+                                     [UIView animateWithDuration:timeInterval/3 animations:^{
+                                         [mapView setVisibleMapRect:mapView.visibleMapRect edgePadding:insets animated:YES];
+                                     }];
+                                 }
+                 ];
+            });
+        }
+    }];
+}
+
+
 RCT_EXPORT_METHOD(fitToSuppliedMarkers:(nonnull NSNumber *)reactTag
                   markers:(nonnull NSArray *)markers
                   animated:(BOOL)animated)
