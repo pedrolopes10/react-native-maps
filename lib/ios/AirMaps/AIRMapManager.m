@@ -226,6 +226,7 @@ RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
         } else {
             AIRMap *mapView = (AIRMap *)view;
             NSTimeInterval timeInterval = duration/1000;    // seconds
+            UIEdgeInsets insets = UIEdgeInsetsZero;
             
             if (edgePadding.count > 0) {
                 // Assuming that "edgePadding" values come in pixels from JS, so we convert them to points.
@@ -234,31 +235,44 @@ RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
                 CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]] / devicePixelsPerPoint;
                 CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]] / devicePixelsPerPoint;
                 CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]] / devicePixelsPerPoint;
-                UIEdgeInsets insets = UIEdgeInsetsMake(top, left, bottom, right);
-
-                // Animation in s steps without using the "MKMapRectForCoordinateRegion" method.
-                [UIView animateWithDuration:timeInterval/2
-                                 animations:^{
-                                     [mapView setCenterCoordinate:latlng];
-                                 }
-                                 completion:^(BOOL finished) {
-                                     MKMapRect newVisibleMapRect = [mapView mapRectThatFits:mapView.visibleMapRect
-                                                                                edgePadding:insets];
-                                     
-                                     [UIView animateWithDuration:timeInterval/2 animations:^{
-                                         [mapView setVisibleMapRect:newVisibleMapRect animated:YES];
-                                     }];
-                                 }
-                 ];
-            } else {
-                MKCoordinateRegion region;
-                region.span = mapView.region.span;
-                region.center = latlng;
-                
-                [AIRMap animateWithDuration:timeInterval animations:^{
-                    [mapView setRegion:region animated:YES];
-                }];
+                insets = UIEdgeInsetsMake(top, left, bottom, right);
             }
+            
+            CLLocationCoordinate2D newCenter = latlng;
+            CLLocationDegrees dxPadding = 0;
+            CLLocationDegrees dyPadding = 0;
+            
+            if (!UIEdgeInsetsEqualToEdgeInsets(insets, UIEdgeInsetsZero)) {
+                CGPoint referencePoint = [mapView convertCoordinate:latlng toPointToView:mapView];
+                MKCoordinateRegion referenceConversionRegion = [mapView convertRect:CGRectMake(referencePoint.x, referencePoint.y, 1, 1) toRegionFromView:mapView];
+                dxPadding = (insets.right - insets.left) * referenceConversionRegion.span.longitudeDelta/2;
+                dyPadding = (insets.top - insets.bottom) * referenceConversionRegion.span.latitudeDelta;
+                
+                CLLocationDegrees newLatitude = latlng.latitude + dyPadding;
+                CLLocationDegrees newLongitude = latlng.longitude + dxPadding;
+                
+                if (newLatitude > 90) {
+                    newLatitude -= 180;
+                }
+                
+                if (newLatitude < -90) {
+                    newLatitude += 180;
+                }
+                
+                if (newLongitude > 180) {
+                    newLongitude -= 360;
+                }
+                
+                if (newLongitude < -180) {
+                    newLongitude += 360;
+                }
+                
+                newCenter = CLLocationCoordinate2DMake(newLatitude, newLongitude);
+            }
+            
+            [UIView animateWithDuration:timeInterval animations:^{
+                [mapView setCenterCoordinate:newCenter];
+            }];
         }
     }];
 }
