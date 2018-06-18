@@ -154,43 +154,38 @@ CGFloat _rotation = 0.0;
     if (self.onPress) self.onPress(pressEvent);
     
     
-    
-    
-    
-    
-    
-//    _calloutIsOpen = YES;
-//    [self setZIndex:_zIndexBeforeOpen];
-//
-//    MKAnnotationView *annotationView = [self getAnnotationView];
-//
-//    [self setSelected:YES animated:NO];
-//
-//    id event = @{
-//            @"action": @"marker-select",
-//            @"id": self.identifier ?: @"unknown",
-//            @"coordinate": @{
-//                    @"latitude": @(self.coordinate.latitude),
-//                    @"longitude": @(self.coordinate.longitude)
-//            }
-//    };
-//
-//    if (self.map.onMarkerSelect) self.map.onMarkerSelect(event);
-//    if (self.onSelect) self.onSelect(event);
-//
-//    if (![self shouldShowCalloutView]) {
-//        // no callout to show
-//        return;
-//    }
-//
-//    [self fillCalloutView:self.map.calloutView];
-//
-//    // This is where we present our custom callout view... MapKit's built-in callout doesn't have the flexibility
-//    // we need, but a lot of work was done by Nick Farina to make this identical to MapKit's built-in.
-//    [self.map.calloutView presentCalloutFromRect:annotationView.bounds
-//                                         inView:annotationView
-//                              constrainedToView:self.map
-//                                       animated:YES];
+    _calloutIsOpen = YES;
+    [self setZIndex:_zIndexBeforeOpen];
+
+    MKAnnotationView *annotationView = [self getAnnotationView];
+
+    [self setSelected:YES animated:NO];
+
+    id event = @{
+            @"action": @"marker-select",
+            @"id": self.identifier ?: @"unknown",
+            @"coordinate": @{
+                    @"latitude": @(self.coordinate.latitude),
+                    @"longitude": @(self.coordinate.longitude)
+            }
+    };
+
+    if (self.map.onMarkerSelect) self.map.onMarkerSelect(event);
+    if (self.onSelect) self.onSelect(event);
+
+    if (![self shouldShowCalloutView]) {
+        // no callout to show
+        return;
+    }
+
+    [self fillCalloutView:self.map.calloutView];
+
+    // This is where we present our custom callout view... MapKit's built-in callout doesn't have the flexibility
+    // we need, but a lot of work was done by Nick Farina to make this identical to MapKit's built-in.
+    [self.map.calloutView presentCalloutFromRect:annotationView.bounds
+                                         inView:annotationView
+                              constrainedToView:self.map
+                                       animated:YES];
 }
 
 #pragma mark - Tap Gesture & Events.
@@ -246,42 +241,25 @@ CGFloat _rotation = 0.0;
 }
 
 - (void)hideCalloutView
-{
-    // the actual marker got clicked
-//    id pressEvent = @{
-//                      @"action": @"marker-press",
-//                      @"id": self.identifier ?: @"unknown",
-//                      @"coordinate": @{
-//                              @"latitude": @(self.coordinate.latitude),
-//                              @"longitude": @(self.coordinate.longitude)
-//                              }
-//                      };
-//    
-//    if (self.onPress) self.onPress(pressEvent);
-    
-    
-    
-    
-    
-    
-//    _calloutIsOpen = NO;
-//    [self setZIndex:_zIndexBeforeOpen];
-//    // hide the callout view
-//    [self.map.calloutView dismissCalloutAnimated:YES];
-//
-//    [self setSelected:NO animated:NO];
-//
-//    id event = @{
-//            @"action": @"marker-deselect",
-//            @"id": self.identifier ?: @"unknown",
-//            @"coordinate": @{
-//                    @"latitude": @(self.coordinate.latitude),
-//                    @"longitude": @(self.coordinate.longitude)
-//            }
-//    };
-//
-//    if (self.map.onMarkerDeselect) self.map.onMarkerDeselect(event);
-//    if (self.onDeselect) self.onDeselect(event);
+{    
+    _calloutIsOpen = NO;
+    [self setZIndex:_zIndexBeforeOpen];
+    // hide the callout view
+    [self.map.calloutView dismissCalloutAnimated:YES];
+
+    [self setSelected:NO animated:NO];
+
+    id event = @{
+            @"action": @"marker-deselect",
+            @"id": self.identifier ?: @"unknown",
+            @"coordinate": @{
+                    @"latitude": @(self.coordinate.latitude),
+                    @"longitude": @(self.coordinate.longitude)
+            }
+    };
+
+    if (self.map.onMarkerDeselect) self.map.onMarkerDeselect(event);
+    if (self.onDeselect) self.onDeselect(event);
 }
 
 - (void)setCalloutOffset:(CGPoint)calloutOffset
