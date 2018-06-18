@@ -642,31 +642,31 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
     AIRMapPolyline *nearestPolyline = nil;
 
     for (id<MKOverlay> overlay in map.overlays) {
-//        if([overlay isKindOfClass:[AIRMapPolygon class]]){
-//            AIRMapPolygon *polygon = (AIRMapPolygon*) overlay;
-//            if (polygon.onPress) {
-//                CGMutablePathRef mpr = CGPathCreateMutable();
-//
-//                for(int i = 0; i < polygon.coordinates.count; i++) {
-//                    AIRMapCoordinate *c = polygon.coordinates[i];
-//                    MKMapPoint mp = MKMapPointForCoordinate(c.coordinate);
-//                    if (i == 0) {
-//                        CGPathMoveToPoint(mpr, NULL, mp.x, mp.y);
-//                    } else {
-//                        CGPathAddLineToPoint(mpr, NULL, mp.x, mp.y);
-//                    }
-//                }
-//
-//                if (CGPathContainsPoint(mpr, NULL, mapPointAsCGP, FALSE)) {
-//                    id event = @{
-//                                @"action": @"polygon-press",
-//                                };
-//                    polygon.onPress(event);
-//                }
-//
-//                CGPathRelease(mpr);
-//            }
-//        }
+        if([overlay isKindOfClass:[AIRMapPolygon class]]){
+            AIRMapPolygon *polygon = (AIRMapPolygon*) overlay;
+            if (polygon.onPress) {
+                CGMutablePathRef mpr = CGPathCreateMutable();
+
+                for(int i = 0; i < polygon.coordinates.count; i++) {
+                    AIRMapCoordinate *c = polygon.coordinates[i];
+                    MKMapPoint mp = MKMapPointForCoordinate(c.coordinate);
+                    if (i == 0) {
+                        CGPathMoveToPoint(mpr, NULL, mp.x, mp.y);
+                    } else {
+                        CGPathAddLineToPoint(mpr, NULL, mp.x, mp.y);
+                    }
+                }
+
+                if (CGPathContainsPoint(mpr, NULL, mapPointAsCGP, FALSE)) {
+                    id event = @{
+                                @"action": @"polygon-press",
+                                };
+                    polygon.onPress(event);
+                }
+
+                CGPathRelease(mpr);
+            }
+        }
 
         if([overlay isKindOfClass:[AIRMapPolyline class]]){
             AIRMapPolyline *polyline = (AIRMapPolyline*) overlay;
