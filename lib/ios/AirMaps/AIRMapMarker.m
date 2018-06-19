@@ -141,7 +141,7 @@ CGFloat _rotation = 0.0;
 
 - (void)showCalloutView
 {
-    // the actual marker got clicked
+    // generate marker's "onPress" event.
     id pressEvent = @{
                  @"action": @"marker-press",
                  @"id": self.identifier ?: @"unknown",
@@ -151,8 +151,9 @@ CGFloat _rotation = 0.0;
                          }
                  };
     
-    if (self.onPress) self.onPress(pressEvent);
-    
+    if (self.onPress) {
+        self.onPress(pressEvent);
+    }
     
     _calloutIsOpen = YES;
     [self setZIndex:_zIndexBeforeOpen];

@@ -34,6 +34,10 @@ static NSString *const RCTMapViewKey = @"MapView";
 
 
 @interface AIRMapManager() <MKMapViewDelegate>
+@property (nonatomic, assign) BOOL shouldIgnoreSelection;
+@end
+
+@interface AIRMapManager() <MKMapViewDelegate>
 
 @end
 
@@ -647,9 +651,12 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
             AIRMapMarker *marker = (AIRMapMarker *)annotation;
             
             if (CGRectContainsPoint(marker.frame, tapPoint)) {
+                if (marker.isSelected) {
+                    self.shouldIgnoreSelection = YES;
+                }
+                
                 // If the tap was on a marker, then we'll not check polygons for taps.
                 shouldCheckPolygons = NO;
-                break;
             }
         }
     }
@@ -809,7 +816,12 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
 - (void)mapView:(AIRMap *)mapView didSelectAnnotationView:(MKAnnotationView *)view
 {
     if ([view.annotation isKindOfClass:[AIRMapMarker class]]) {
-        [(AIRMapMarker *)view.annotation showCalloutView];
+        if (!self.shouldIgnoreSelection) {
+            [(AIRMapMarker *)view.annotation showCalloutView];
+        } else {
+            self.shouldIgnoreSelection = NO;
+        }
+        
     } else if ([view.annotation isKindOfClass:[MKUserLocation class]] && mapView.userLocationAnnotationTitle != nil && view.annotation.title != mapView.userLocationAnnotationTitle) {
         [(MKUserLocation*)view.annotation setTitle: mapView.userLocationAnnotationTitle];
     }
@@ -831,7 +843,7 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
         }
         return nil;
     }
-
+    
     marker.map = mapView;
     return [marker getAnnotationView];
 }
