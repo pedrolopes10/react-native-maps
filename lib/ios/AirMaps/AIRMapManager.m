@@ -32,10 +32,6 @@
 
 static NSString *const RCTMapViewKey = @"MapView";
 
-//@interface AIRMapManager() <MKMapViewDelegate>
-//@property (nonatomic, assign) BOOL shouldIgnoreSelection;
-//@end
-
 @interface AIRMapManager() <MKMapViewDelegate>
 
 @end
@@ -128,7 +124,6 @@ RCT_CUSTOM_VIEW_PROPERTY(region, MKCoordinateRegion, AIRMap)
     [view setRegion:[RCTConvert MKCoordinateRegion:json] animated:NO];
     view.ignoreRegionChanges = originalIgnore;
 }
-
 
 #pragma mark exported MapView methods
 
@@ -643,7 +638,6 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
     double maxMeters = [self metersFromPixel:MAX_DISTANCE_PX atPoint:tapPoint forMap:map];
     float nearestDistance = MAXFLOAT;
     AIRMapPolyline *nearestPolyline = nil;
-    BOOL shouldCheckPolygons = YES;
     
     for (id<MKAnnotation> annotation in map.annotations) {
         if ([annotation isKindOfClass:[AIRMapMarker class]]) {
@@ -651,7 +645,7 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
             
             if (CGRectContainsPoint(marker.frame, tapPoint)) {
                 if (![marker.identifier isEqualToString:@"label"] && marker.onPress) {
-                    // generate marker's "onPress" event.
+                    // Generate marker's "onPress" event
                     id event = @{
                                  @"action": @"marker-press",
                                  @"id": marker.identifier ?: @"unknown",
@@ -663,17 +657,15 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
                     
                     marker.onPress(event);
                     
-                    // If the tap was on a marker, then we'll not check polygons for taps.
-                    shouldCheckPolygons = NO;
+                    // Tap detected on a marker, so let's abort this event processing.
+                    return;
                 }
             }
-            
-            
         }
     }
     
     for (id<MKOverlay> overlay in map.overlays) {
-        if (shouldCheckPolygons && [overlay isKindOfClass:[AIRMapPolygon class]]) {
+        if ([overlay isKindOfClass:[AIRMapPolygon class]]) {
             AIRMapPolygon *polygon = (AIRMapPolygon*) overlay;
             
             if (polygon.onPress) {
@@ -826,45 +818,17 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
 
 - (void)mapView:(AIRMap *)mapView didSelectAnnotationView:(MKAnnotationView *)view
 {
-//    id<MKAnnotation> annotation = view.annotation;
-//
-//    if ([annotation isKindOfClass:[AIRMapMarker class]]) {
-//        AIRMapMarker *marker = (AIRMapMarker *)annotation;
-//
-//        // generate marker's "onPress" event.
-//        id event = @{
-//                     @"action": @"marker-press",
-//                     @"id": marker.identifier ?: @"unknown",
-//                     @"coordinate": @{
-//                             @"latitude": @(marker.coordinate.latitude),
-//                             @"longitude": @(marker.coordinate.longitude)
-//                             }
-//                     };
-//
-//        if (marker.onPress) {
-//            marker.onPress(event);
-//        }
-//    }
-
-    
-    
-//    if ([view.annotation isKindOfClass:[AIRMapMarker class]]) {
-//        if (!self.shouldIgnoreSelection) {
-//            [(AIRMapMarker *)view.annotation showCalloutView];
-//        } else {
-//            self.shouldIgnoreSelection = NO;
-//        }
-//
-//    } else if ([view.annotation isKindOfClass:[MKUserLocation class]] && mapView.userLocationAnnotationTitle != nil && view.annotation.title != mapView.userLocationAnnotationTitle) {
-//        [(MKUserLocation*)view.annotation setTitle: mapView.userLocationAnnotationTitle];
-//    }
-
+    if ([view.annotation isKindOfClass:[AIRMapMarker class]]) {
+        [(AIRMapMarker *)view.annotation showCalloutView];
+    } else if ([view.annotation isKindOfClass:[MKUserLocation class]] && mapView.userLocationAnnotationTitle != nil && view.annotation.title != mapView.userLocationAnnotationTitle) {
+        [(MKUserLocation*)view.annotation setTitle: mapView.userLocationAnnotationTitle];
+    }
 }
 
 - (void)mapView:(AIRMap *)mapView didDeselectAnnotationView:(MKAnnotationView *)view {
-//    if ([view.annotation isKindOfClass:[AIRMapMarker class]]) {
-//        [(AIRMapMarker *)view.annotation hideCalloutView];
-//    }
+    if ([view.annotation isKindOfClass:[AIRMapMarker class]]) {
+        [(AIRMapMarker *)view.annotation hideCalloutView];
+    }
 }
 
 - (MKAnnotationView *)mapView:(__unused AIRMap *)mapView viewForAnnotation:(AIRMapMarker *)marker

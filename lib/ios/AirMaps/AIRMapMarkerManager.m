@@ -25,7 +25,8 @@ RCT_EXPORT_MODULE()
 - (UIView *)view
 {
     AIRMapMarker *marker = [AIRMapMarker new];
-    [marker addTapGestureRecognizer];
+    // Here we are disabling the marker tap gesture recognizer since we detect it on "handleTap" method of "AIRMapManager".
+    //[marker addTapGestureRecognizer];
     marker.bridge = self.bridge;
     return marker;
 }
