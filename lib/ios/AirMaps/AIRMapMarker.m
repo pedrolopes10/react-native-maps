@@ -141,9 +141,23 @@ CGFloat _rotation = 0.0;
 
 - (void)showCalloutView
 {
+    // generate marker's "onPress" event.
+    id pressEvent = @{
+                 @"action": @"marker-press",
+                 @"id": self.identifier ?: @"unknown",
+                 @"coordinate": @{
+                         @"latitude": @(self.coordinate.latitude),
+                         @"longitude": @(self.coordinate.longitude)
+                         }
+                 };
+    
+    if (self.onPress) {
+        self.onPress(pressEvent);
+    }
+    
     _calloutIsOpen = YES;
     [self setZIndex:_zIndexBeforeOpen];
-    
+
     MKAnnotationView *annotationView = [self getAnnotationView];
 
     [self setSelected:YES animated:NO];
@@ -228,7 +242,7 @@ CGFloat _rotation = 0.0;
 }
 
 - (void)hideCalloutView
-{
+{    
     _calloutIsOpen = NO;
     [self setZIndex:_zIndexBeforeOpen];
     // hide the callout view
