@@ -640,16 +640,31 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
     double maxMeters = [self metersFromPixel:MAX_DISTANCE_PX atPoint:tapPoint forMap:map];
     float nearestDistance = MAXFLOAT;
     AIRMapPolyline *nearestPolyline = nil;
-
+    BOOL shouldCheckPolygons = YES;
+    
+    for (id<MKAnnotation> annotation in map.annotations) {
+        if ([annotation isKindOfClass:[AIRMapMarker class]]) {
+            AIRMapMarker *marker = (AIRMapMarker *)annotation;
+            
+            if (CGRectContainsPoint(marker.frame, tapPoint)) {
+                // If the tap was on a marker, then we'll not check polygons for taps.
+                shouldCheckPolygons = NO;
+                break;
+            }
+        }
+    }
+    
     for (id<MKOverlay> overlay in map.overlays) {
-        if([overlay isKindOfClass:[AIRMapPolygon class]]){
+        if (shouldCheckPolygons && [overlay isKindOfClass:[AIRMapPolygon class]]) {
             AIRMapPolygon *polygon = (AIRMapPolygon*) overlay;
+            
             if (polygon.onPress) {
                 CGMutablePathRef mpr = CGPathCreateMutable();
 
                 for(int i = 0; i < polygon.coordinates.count; i++) {
                     AIRMapCoordinate *c = polygon.coordinates[i];
                     MKMapPoint mp = MKMapPointForCoordinate(c.coordinate);
+                    
                     if (i == 0) {
                         CGPathMoveToPoint(mpr, NULL, mp.x, mp.y);
                     } else {
@@ -717,7 +732,6 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
                     @"y": @(tapPoint.y),
             },
     });
-
 }
 
 - (void)handleMapDrag:(UIPanGestureRecognizer*)recognizer {
