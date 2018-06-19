@@ -32,11 +32,6 @@
 
 static NSString *const RCTMapViewKey = @"MapView";
 
-
-@interface AIRMapManager() <MKMapViewDelegate>
-@property (nonatomic, assign) BOOL shouldIgnoreSelection;
-@end
-
 @interface AIRMapManager() <MKMapViewDelegate>
 
 @end
@@ -129,7 +124,6 @@ RCT_CUSTOM_VIEW_PROPERTY(region, MKCoordinateRegion, AIRMap)
     [view setRegion:[RCTConvert MKCoordinateRegion:json] animated:NO];
     view.ignoreRegionChanges = originalIgnore;
 }
-
 
 #pragma mark exported MapView methods
 
@@ -644,25 +638,34 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
     double maxMeters = [self metersFromPixel:MAX_DISTANCE_PX atPoint:tapPoint forMap:map];
     float nearestDistance = MAXFLOAT;
     AIRMapPolyline *nearestPolyline = nil;
-    BOOL shouldCheckPolygons = YES;
     
     for (id<MKAnnotation> annotation in map.annotations) {
         if ([annotation isKindOfClass:[AIRMapMarker class]]) {
             AIRMapMarker *marker = (AIRMapMarker *)annotation;
             
             if (CGRectContainsPoint(marker.frame, tapPoint)) {
-                if (marker.isSelected) {
-                    self.shouldIgnoreSelection = YES;
+                if (![marker.identifier isEqualToString:@"label"] && marker.onPress) {
+                    // Generate marker's "onPress" event
+                    id event = @{
+                                 @"action": @"marker-press",
+                                 @"id": marker.identifier ?: @"unknown",
+                                 @"coordinate": @{
+                                         @"latitude": @(marker.coordinate.latitude),
+                                         @"longitude": @(marker.coordinate.longitude)
+                                         }
+                                 };
+                    
+                    marker.onPress(event);
+                    
+                    // Tap detected on a marker, so let's abort this event processing.
+                    return;
                 }
-                
-                // If the tap was on a marker, then we'll not check polygons for taps.
-                shouldCheckPolygons = NO;
             }
         }
     }
     
     for (id<MKOverlay> overlay in map.overlays) {
-        if (shouldCheckPolygons && [overlay isKindOfClass:[AIRMapPolygon class]]) {
+        if ([overlay isKindOfClass:[AIRMapPolygon class]]) {
             AIRMapPolygon *polygon = (AIRMapPolygon*) overlay;
             
             if (polygon.onPress) {
@@ -816,16 +819,10 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
 - (void)mapView:(AIRMap *)mapView didSelectAnnotationView:(MKAnnotationView *)view
 {
     if ([view.annotation isKindOfClass:[AIRMapMarker class]]) {
-        if (!self.shouldIgnoreSelection) {
-            [(AIRMapMarker *)view.annotation showCalloutView];
-        } else {
-            self.shouldIgnoreSelection = NO;
-        }
-        
+        [(AIRMapMarker *)view.annotation showCalloutView];
     } else if ([view.annotation isKindOfClass:[MKUserLocation class]] && mapView.userLocationAnnotationTitle != nil && view.annotation.title != mapView.userLocationAnnotationTitle) {
         [(MKUserLocation*)view.annotation setTitle: mapView.userLocationAnnotationTitle];
     }
-
 }
 
 - (void)mapView:(AIRMap *)mapView didDeselectAnnotationView:(MKAnnotationView *)view {
