@@ -435,14 +435,9 @@ RCT_EXPORT_METHOD(fitToCoordinates:(nonnull NSNumber *)reactTag
                 coords[i] = coordinates[i].coordinate;
             }
             MKPolyline *polyline = [MKPolyline polylineWithCoordinates:coords count:coordinates.count];
+            UIEdgeInsets insets = [self edgeInsetsFrom:edgePadding];
 
-            // Set Map viewport
-            CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]];
-            CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]];
-            CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]];
-            CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]];
-
-            [mapView setVisibleMapRect:[polyline boundingMapRect] edgePadding:UIEdgeInsetsMake(top, left, bottom, right) animated:animated];
+            [mapView setVisibleMapRect:[polyline boundingMapRect] edgePadding:insets animated:animated];
 
         }
     }];
@@ -1167,9 +1162,9 @@ static int kDragCenterContext;
     if (edgePadding.count > 0) {
         // Assuming that "edgePadding" values come in pixels from JS, so we convert them to points.
         CGFloat devicePixelsPerPoint = UIScreen.mainScreen.scale;
-        CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]] / devicePixelsPerPoint;
+        CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]] / (devicePixelsPerPoint+1);
         CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]] / devicePixelsPerPoint;
-        CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]] / devicePixelsPerPoint;
+        CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]] / (devicePixelsPerPoint+1);
         CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]] / devicePixelsPerPoint;
         edgeInsets = UIEdgeInsetsMake(top, left, bottom, right);
     }
