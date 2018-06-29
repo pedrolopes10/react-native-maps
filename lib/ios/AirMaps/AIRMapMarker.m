@@ -144,7 +144,7 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
 {
     _calloutIsOpen = YES;
     [self setZIndex:_zIndexBeforeOpen];
-    
+
     MKAnnotationView *annotationView = [self getAnnotationView];
 
     [self setSelected:YES animated:NO];
@@ -229,7 +229,7 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
 }
 
 - (void)hideCalloutView
-{
+{    
     _calloutIsOpen = NO;
     [self setZIndex:_zIndexBeforeOpen];
     // hide the callout view

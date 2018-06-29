@@ -32,7 +32,6 @@
 
 static NSString *const RCTMapViewKey = @"MapView";
 
-
 @interface AIRMapManager() <MKMapViewDelegate>
 
 @end
@@ -125,7 +124,6 @@ RCT_CUSTOM_VIEW_PROPERTY(region, MKCoordinateRegion, AIRMap)
     [view setRegion:[RCTConvert MKCoordinateRegion:json] animated:NO];
     view.ignoreRegionChanges = originalIgnore;
 }
-
 
 #pragma mark exported MapView methods
 
@@ -461,14 +459,9 @@ RCT_EXPORT_METHOD(fitToCoordinates:(nonnull NSNumber *)reactTag
                 coords[i] = coordinates[i].coordinate;
             }
             MKPolyline *polyline = [MKPolyline polylineWithCoordinates:coords count:coordinates.count];
+            UIEdgeInsets insets = [self edgeInsetsFrom:edgePadding];
 
-            // Set Map viewport
-            CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]];
-            CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]];
-            CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]];
-            CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]];
-
-            [mapView setVisibleMapRect:[polyline boundingMapRect] edgePadding:UIEdgeInsetsMake(top, left, bottom, right) animated:animated];
+            [mapView setVisibleMapRect:[polyline boundingMapRect] edgePadding:insets animated:animated];
 
         }
     }];
@@ -664,16 +657,43 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
     double maxMeters = [self metersFromPixel:MAX_DISTANCE_PX atPoint:tapPoint forMap:map];
     float nearestDistance = MAXFLOAT;
     AIRMapPolyline *nearestPolyline = nil;
-
+    
+    for (id<MKAnnotation> annotation in map.annotations) {
+        if ([annotation isKindOfClass:[AIRMapMarker class]]) {
+            AIRMapMarker *marker = (AIRMapMarker *)annotation;
+            
+            if (CGRectContainsPoint(marker.frame, tapPoint)) {
+                if (![marker.identifier isEqualToString:@"label"] && marker.onPress) {
+                    // Generate marker's "onPress" event
+                    id event = @{
+                                 @"action": @"marker-press",
+                                 @"id": marker.identifier ?: @"unknown",
+                                 @"coordinate": @{
+                                         @"latitude": @(marker.coordinate.latitude),
+                                         @"longitude": @(marker.coordinate.longitude)
+                                         }
+                                 };
+                    
+                    marker.onPress(event);
+                    
+                    // Tap detected on a marker, so let's abort this event processing.
+                    return;
+                }
+            }
+        }
+    }
+    
     for (id<MKOverlay> overlay in map.overlays) {
-        if([overlay isKindOfClass:[AIRMapPolygon class]]){
+        if ([overlay isKindOfClass:[AIRMapPolygon class]]) {
             AIRMapPolygon *polygon = (AIRMapPolygon*) overlay;
+            
             if (polygon.onPress) {
                 CGMutablePathRef mpr = CGPathCreateMutable();
 
                 for(int i = 0; i < polygon.coordinates.count; i++) {
                     AIRMapCoordinate *c = polygon.coordinates[i];
                     MKMapPoint mp = MKMapPointForCoordinate(c.coordinate);
+                    
                     if (i == 0) {
                         CGPathMoveToPoint(mpr, NULL, mp.x, mp.y);
                     } else {
@@ -741,7 +761,6 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
                     @"y": @(tapPoint.y),
             },
     });
-
 }
 
 - (void)handleMapDrag:(UIPanGestureRecognizer*)recognizer {
@@ -823,7 +842,6 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
     } else if ([view.annotation isKindOfClass:[MKUserLocation class]] && mapView.userLocationAnnotationTitle != nil && view.annotation.title != mapView.userLocationAnnotationTitle) {
         [(MKUserLocation*)view.annotation setTitle: mapView.userLocationAnnotationTitle];
     }
-
 }
 
 - (void)mapView:(AIRMap *)mapView didDeselectAnnotationView:(MKAnnotationView *)view {
@@ -841,7 +859,7 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
         }
         return nil;
     }
-
+    
     marker.map = mapView;
     return [marker getAnnotationView];
 }
@@ -1168,9 +1186,9 @@ static int kDragCenterContext;
     if (edgePadding.count > 0) {
         // Assuming that "edgePadding" values come in pixels from JS, so we convert them to points.
         CGFloat devicePixelsPerPoint = UIScreen.mainScreen.scale;
-        CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]] / devicePixelsPerPoint;
+        CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]] / (devicePixelsPerPoint+1);
         CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]] / devicePixelsPerPoint;
-        CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]] / devicePixelsPerPoint;
+        CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]] / (devicePixelsPerPoint+1);
         CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]] / devicePixelsPerPoint;
         edgeInsets = UIEdgeInsetsMake(top, left, bottom, right);
     }
