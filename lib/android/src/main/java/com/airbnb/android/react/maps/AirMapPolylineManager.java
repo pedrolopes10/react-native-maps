@@ -47,6 +47,11 @@ public class AirMapPolylineManager extends ViewGroupManager<AirMapPolyline> {
     view.setCoordinates(coordinates);
   }
 
+  @ReactProp(name = "strokeColors")
+  public void setStrokeColors(AirMapPolyline view, ReadableArray strokeColors) {
+    view.setStrokeColors(strokeColors);
+  }
+  
   @ReactProp(name = "strokeWidth", defaultFloat = 1f)
   public void setStrokeWidth(AirMapPolyline view, float widthInPoints) {
     float widthInScreenPx = metrics.density * widthInPoints; // done for parity with iOS
