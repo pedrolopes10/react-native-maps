@@ -53,38 +53,8 @@ public class AirMapPolyline extends AirMapFeature {
         if(this.polylineArray.size() == 1){
             polyline.setPoints(this.coordinates);
         } else {
-            PolylineOptions options = new PolylineOptions();
-
-            if(polylineArray.size() > coordinates.size()){
-                removeFromMap(this.map);
-                createPolyline();
-            } else {
-                if(coordinates.size() > 1){
-                   ReadableMap coordinate2 = coordinates.getMap(coordinates.size()-2);
-                   options.add(new LatLng(coordinate2.getDouble("latitude"), coordinate2.getDouble("longitude")));
-                }
-
-                ReadableMap coordinate = coordinates.getMap(coordinates.size()-1);
-                options.add(new LatLng(coordinate.getDouble("latitude"), coordinate.getDouble("longitude")));
-
-                Integer colorToUse;
-
-                if(this.strokeColors != null){
-                    colorToUse = Color.parseColor(this.strokeColors.get(this.strokeColors.size()-1));
-                } else {
-                    colorToUse = color;
-                }
-
-                options.color(colorToUse);
-                options.width(width);
-                options.geodesic(geodesic);
-                options.zIndex(zIndex);
-
-                polyline = this.map.addPolyline(options);
-                polyline.setClickable(true);
-
-                this.polylineArray.add(polyline);
-          }
+            removeFromMap(this.map);
+            createPolyline();
         }
     }
   }
@@ -118,7 +88,7 @@ public class AirMapPolyline extends AirMapFeature {
 
         Integer colorToUse;
 
-        if((strokeColors != null) && (coordinates.size() == strokeColors.size())){
+        if((strokeColors != null) && (strokeColors.size() > 0)){
             colorToUse = Color.parseColor(strokeColors.get(i));
         } else {
             colorToUse = color;
