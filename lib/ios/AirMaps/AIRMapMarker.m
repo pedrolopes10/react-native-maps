@@ -26,7 +26,33 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
     MKPinAnnotationView *_pinView;
     BOOL _calloutIsOpen;
     NSInteger _zIndexBeforeOpen;
-    CGFloat _rotation = 0.0;
+    CGFloat _rotation;
+}
+
+-  (instancetype)initWithAnnotation:(nullable id <MKAnnotation>)annotation reuseIdentifier:(nullable NSString *)reuseIdentifier {
+    self = [super initWithAnnotation:annotation reuseIdentifier:reuseIdentifier];
+    
+    if (self) {
+        self.rotation = -3600;   // (-360*10) value used to indicate that rotation has not been set yet!
+    }
+    
+    return self;
+}
+
+- (nullable instancetype)initWithCoder:(NSCoder *)aDecoder {
+    self = [super initWithCoder:aDecoder];
+    
+    if (self) {
+        self.rotation = -3600;   // (-360*10) value used to indicate that rotation has not been set yet!
+    }
+    
+    return self;
+}
+
+- (void)prepareForReuse {
+    [self prepareForReuse];
+    
+    self.rotation = -3600;   // value used to indicate that rotation has not been set yet!
 }
 
 - (void)reactSetFrame:(CGRect)frame
@@ -275,11 +301,14 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
     // convert degrees to radians
     _rotation = rotation * M_PI / 180.0;
     
-    RCTAssertMainQueue();
+    // use our little hack for knowing if this rotation has already been set by the RN code
+    self.hasRotation = (rotation != -3600);
+    self.hidden = !self.hasRotation;
     
-//    [UIView animateWithDuration:0.15 animations:^{
+    if (self.hasRotation) {
+        RCTAssertMainQueue();
         self.transform = CGAffineTransformMakeRotation(_rotation);
-//    }];
+    }
 }
 
 - (CLLocationDegrees)rotation {
@@ -308,6 +337,7 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
                                                                      }
                                                                      dispatch_async(dispatch_get_main_queue(), ^{
                                                                          self.image = image;
+                                                                         self.hidden = !self.hasRotation;
                                                                      });
                                                                  }];
 }
