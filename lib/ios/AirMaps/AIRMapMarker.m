@@ -298,14 +298,15 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
 }
 
 - (void)setRotation:(CLLocationDegrees)newRotationInDegrees {
-    // use our little hack for knowing if this rotation has already been set by the RN code
+    // Little hack for knowing if this rotation has already been set by the RN code.
+    // This can probebly work without needing this fixed value, should be reviewed later but
+    // this code seems fix the vertical airplanes issue.
     self.hasRotation = (newRotationInDegrees != -3600);
     
     // convert degrees to radians
     _rotation = newRotationInDegrees * M_PI / 180.0;
     
     if (self.hasRotation) {
-//        RCTAssertMainQueue();
         dispatch_async(dispatch_get_main_queue(), ^{
             self.transform = CGAffineTransformMakeRotation(self.rotation);
             self.hidden = false;
@@ -344,7 +345,7 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
                                                                      dispatch_async(dispatch_get_main_queue(), ^{
                                                                          self.image = image;
                                                                          
-                                                                         // this "if" code is "duplicated" and probably not needed here!
+                                                                         // This "if" code is "duplicated" and probably not needed here!
                                                                          if (self.hasRotation) {
                                                                              self.transform = CGAffineTransformMakeRotation(self.rotation);
                                                                              self.hidden = false;
