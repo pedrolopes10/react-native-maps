@@ -297,17 +297,23 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
   [self setAlpha:opacity];
 }
 
-- (void)setRotation:(CLLocationDegrees)rotation {
-    // convert degrees to radians
-    _rotation = rotation * M_PI / 180.0;
-    
+- (void)setRotation:(CLLocationDegrees)newRotationInDegrees {
     // use our little hack for knowing if this rotation has already been set by the RN code
-    self.hasRotation = (rotation != -3600);
-    self.hidden = !self.hasRotation;
+    self.hasRotation = (newRotationInDegrees != -3600);
+    
+    // convert degrees to radians
+    _rotation = newRotationInDegrees * M_PI / 180.0;
     
     if (self.hasRotation) {
-        RCTAssertMainQueue();
-        self.transform = CGAffineTransformMakeRotation(_rotation);
+//        RCTAssertMainQueue();
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.transform = CGAffineTransformMakeRotation(self.rotation);
+            self.hidden = false;
+            [self setNeedsDisplay];
+        });
+    } else {
+        self.hidden = true;
+        [self setNeedsDisplay];
     }
 }
 
@@ -337,7 +343,14 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
                                                                      }
                                                                      dispatch_async(dispatch_get_main_queue(), ^{
                                                                          self.image = image;
-                                                                         self.hidden = !self.hasRotation;
+                                                                         
+                                                                         // this "if" code is "duplicated" and probably not needed here!
+                                                                         if (self.hasRotation) {
+                                                                             self.transform = CGAffineTransformMakeRotation(self.rotation);
+                                                                             self.hidden = false;
+                                                                         }
+                                                                         
+                                                                         [self setNeedsDisplay];
                                                                      });
                                                                  }];
 }
