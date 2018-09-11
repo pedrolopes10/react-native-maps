@@ -30,7 +30,6 @@ import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.UIManagerModule;
-import com.facebook.react.uimanager.ViewProps;
 import com.facebook.react.uimanager.events.EventDispatcher;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -189,7 +188,7 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
       attacherGroup.setClipBounds(new Rect(0, 0, 0, 0));
     }
-    attacherGroup.setOverflow(ViewProps.HIDDEN);
+    attacherGroup.setOverflow("hidden");
     addView(attacherGroup);
   }
 
