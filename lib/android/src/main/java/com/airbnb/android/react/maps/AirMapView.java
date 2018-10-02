@@ -261,7 +261,9 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
       public void onPolygonClick(Polygon polygon) {
         WritableMap event = makeClickEventData(polygon.getPoints().get(0));
         event.putString("action", "polygon-press");
-        manager.pushEvent(context, polygonMap.get(polygon), "onPress", event);
+        if(polygonMap.get(polygon) != null) {
+            manager.pushEvent(context, polygonMap.get(polygon), "onPress", event);
+        }
       }
     });
 
@@ -270,7 +272,9 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
       public void onPolylineClick(Polyline polyline) {
         WritableMap event = makeClickEventData(polyline.getPoints().get(0));
         event.putString("action", "polyline-press");
-        manager.pushEvent(context, polylineMap.get(polyline), "onPress", event);
+        if(polylineMap.get(polyline) != null) {
+            manager.pushEvent(context, polylineMap.get(polyline), "onPress", event);
+        }
       }
     });
 
