@@ -26,41 +26,13 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
     MKPinAnnotationView *_pinView;
     BOOL _calloutIsOpen;
     NSInteger _zIndexBeforeOpen;
-    CGFloat _rotation;
-}
-
--  (instancetype)initWithAnnotation:(nullable id <MKAnnotation>)annotation reuseIdentifier:(nullable NSString *)reuseIdentifier {
-    self = [super initWithAnnotation:annotation reuseIdentifier:reuseIdentifier];
-    
-    if (self) {
-        self.rotation = -3600;   // (-360*10) value used to indicate that rotation has not been set yet!
-    }
-    
-    return self;
-}
-
-- (nullable instancetype)initWithCoder:(NSCoder *)aDecoder {
-    self = [super initWithCoder:aDecoder];
-    
-    if (self) {
-        self.rotation = -3600;   // (-360*10) value used to indicate that rotation has not been set yet!
-    }
-    
-    return self;
 }
 
 - (void)prepareForReuse {
     [self prepareForReuse];
     
-    self.rotation = -3600;   // value used to indicate that rotation has not been set yet!
-}
-
-- (instancetype)initWithFrame:(CGRect)frame {
-    self = [super initWithFrame:frame];
-    if (self) {
-        [self.layer addObserver:self forKeyPath:@"zPosition" options:NSKeyValueObservingOptionNew context:nil];
-    }
-    return self;
+    _rotation = 0;
+    self.transform = CGAffineTransformIdentity;
 }
 
 - (void)reactSetFrame:(CGRect)frame
@@ -131,6 +103,8 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
         // In either case, we want to return the AIRMapMarker since it is both an MKAnnotation and an
         // MKAnnotationView all at the same time.
         self.layer.zPosition = self.zIndex;
+        self.transform = CGAffineTransformMakeRotation(self.rotation);
+        
         return self;
     }
 }
@@ -162,9 +136,7 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
         // when this is set, the callout's content will be whatever react views the user has put as the callout's
         // children.
         calloutView.contentView = self.calloutView;
-
     } else {
-
         // if there is no calloutView, it means the user wants to use the default callout behavior with title/subtitle
         // pairs.
         calloutView.title = self.title;
@@ -306,28 +278,12 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
 }
 
 - (void)setRotation:(CLLocationDegrees)newRotationInDegrees {
-    // Little hack for knowing if this rotation has already been set by the RN code.
-    // This can probebly work without needing this fixed value, should be reviewed later but
-    // this code seems fix the vertical airplanes issue.
-    self.hasRotation = (newRotationInDegrees != -3600);
-    
-    // convert degrees to radians
+    // set rotation, converting degrees to radians
     _rotation = newRotationInDegrees * M_PI / 180.0;
     
-    if (self.hasRotation) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self.transform = CGAffineTransformMakeRotation(self.rotation);
-            self.hidden = false;
-            [self setNeedsDisplay];
-        });
-    } else {
-        self.hidden = true;
-        [self setNeedsDisplay];
-    }
-}
-
-- (CLLocationDegrees)rotation {
-    return _rotation;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.transform = CGAffineTransformMakeRotation(self.rotation);
+    });
 }
 
 - (void)setImageSrc:(NSString *)imageSrc
@@ -352,14 +308,6 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
                                                                      }
                                                                      dispatch_async(dispatch_get_main_queue(), ^{
                                                                          self.image = image;
-                                                                         
-                                                                         // This "if" code is "duplicated" and probably not needed here!
-                                                                         if (self.hasRotation) {
-                                                                             self.transform = CGAffineTransformMakeRotation(self.rotation);
-                                                                             self.hidden = false;
-                                                                         }
-                                                                         
-                                                                         [self setNeedsDisplay];
                                                                      });
                                                                  }];
 }
@@ -378,16 +326,6 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
     _zIndexBeforeOpen = zIndex;
     _zIndex = _calloutIsOpen ? zIndex + AIR_CALLOUT_OPEN_ZINDEX_BASELINE : zIndex;
     self.layer.zPosition = zIndex;
-}
-
-- (void)dealloc {
-    [self.layer removeObserver:self forKeyPath:@"zPosition"];
-}
-
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
-    if ([keyPath isEqualToString:@"zPosition"]) {
-        self.layer.zPosition = _zIndex;
-    }
 }
 
 @end
