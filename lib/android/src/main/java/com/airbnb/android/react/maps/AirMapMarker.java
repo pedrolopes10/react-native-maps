@@ -357,7 +357,7 @@ public class AirMapMarker extends AirMapFeature {
         if (holder != null) {
           iconBitmap = holder.bitmap;
           iconBitmapDescriptor = holder.bitmapDescriptor;
-          update();
+          update(true);
           return;
         }
       }
