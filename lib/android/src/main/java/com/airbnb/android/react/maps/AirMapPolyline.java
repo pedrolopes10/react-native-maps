@@ -26,9 +26,14 @@ public class AirMapPolyline extends AirMapFeature {
   private float width;
   private boolean geodesic;
   private float zIndex;
+  private String type;
 
   public AirMapPolyline(Context context) {
     super(context);
+  }
+
+  public void setType(String type) {
+    this.type = type;
   }
 
   public void setStrokeColors(ReadableArray strokeColors) {
@@ -49,13 +54,11 @@ public class AirMapPolyline extends AirMapFeature {
           new LatLng(coordinate.getDouble("latitude"), coordinate.getDouble("longitude")));
     }
 
-    if (polylineArray != null) {
-        if(this.polylineArray.size() == 1){
-            polyline.setPoints(this.coordinates);
-        } else {
-            removeFromMap(this.map);
-            createPolyline();
-        }
+    if (polyline != null && (type.equals("fake") || type.equals("single"))) {
+        polyline.setPoints(this.coordinates);
+    } else if (polyline != null && type.equals("actual")){
+        removeFromMap(this.map);
+        createPolyline();
     }
   }
 
@@ -100,7 +103,7 @@ public class AirMapPolyline extends AirMapFeature {
         options.zIndex(zIndex);
 
         polyline = this.map.addPolyline(options);
-        polyline.setClickable(true);
+        polyline.setClickable(false);
         this.polylineArray.add(i, polyline);
     }
   }

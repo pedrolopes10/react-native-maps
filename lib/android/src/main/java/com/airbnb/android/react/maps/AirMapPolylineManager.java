@@ -42,6 +42,11 @@ public class AirMapPolylineManager extends ViewGroupManager<AirMapPolyline> {
     return new AirMapPolyline(context);
   }
 
+  @ReactProp(name = "type")
+  public void setType(AirMapPolyline view, String type) {
+    view.setType(type);
+  }
+
   @ReactProp(name = "coordinates")
   public void setCoordinate(AirMapPolyline view, ReadableArray coordinates) {
     view.setCoordinates(coordinates);
