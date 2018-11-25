@@ -91,7 +91,7 @@ public class AirMapPolyline extends AirMapFeature {
 
         Integer colorToUse;
 
-        if((strokeColors != null) && (strokeColors.size() > 0) && (strokeColors.size() == coordinates.size()) && (!"undefined".equals(strokeColors.get(i)))){
+        if((strokeColors != null) && (strokeColors.size() > 0) && (strokeColors.size() == coordinates.size()) && (!"undefined".equals(strokeColors.get(i))) && (strokeColors.get(i) != null)){
             colorToUse = Color.parseColor(strokeColors.get(i));
         } else {
             colorToUse = color;
