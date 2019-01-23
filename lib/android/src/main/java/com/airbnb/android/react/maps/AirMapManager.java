@@ -265,6 +265,7 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
     float angle;
     ReadableMap region;
     ReadableMap camera;
+	ReadableMap edgePadding;
 
     switch (commandId) {
       case SET_CAMERA:
