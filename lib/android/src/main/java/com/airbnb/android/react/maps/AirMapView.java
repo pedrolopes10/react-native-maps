@@ -698,7 +698,7 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     }
   }
 
-  public void animateToCamera(ReadableMap camera, int duration) {
+  public void animateToCamera(ReadableMap camera, int duration, ReadableMap edgePadding) {
     if (map == null) return;
     CameraPosition.Builder builder = new CameraPosition.Builder(map.getCameraPosition());
     if (camera.hasKey("zoom")) {
@@ -717,11 +717,20 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
 
     CameraUpdate update = CameraUpdateFactory.newCameraPosition(builder.build());
 
+    if (edgePadding != null) {
+      map.setPadding(edgePadding.getInt("left"), edgePadding.getInt("top"),
+          edgePadding.getInt("right"), edgePadding.getInt("bottom"));
+    }
+
     if (duration <= 0) {
       map.moveCamera(update);
     }
     else {
       map.animateCamera(update, duration, null);
+    }
+
+    if (edgePadding != null) {
+      map.setPadding(0, 0, 0, 0);
     }
   }
 

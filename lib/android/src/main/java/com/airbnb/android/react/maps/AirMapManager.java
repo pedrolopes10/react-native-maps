@@ -269,13 +269,14 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
     switch (commandId) {
       case SET_CAMERA:
         camera = args.getMap(0);
-        view.animateToCamera(camera, 0);
+        view.animateToCamera(camera, 0, null);
         break;
 
       case ANIMATE_CAMERA:
         camera = args.getMap(0);
         duration = args.getInt(1);
-        view.animateToCamera(camera, duration);
+        edgePadding = args.getMap(2);
+        view.animateToCamera(camera, duration, edgePadding);
         break;
 
       case ANIMATE_TO_NAVIGATION:
