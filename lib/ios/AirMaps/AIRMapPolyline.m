@@ -67,7 +67,7 @@
     {
         coords[i] = coordinates[i].coordinate;
     }
-    self.polyline = [MKPolyline polylineWithCoordinates:coords count:coordinates.count];
+    self.polyline = [MKGeodesicPolyline polylineWithCoordinates:coords count:coordinates.count];
     self.renderer = [self createRenderer];
     [self update];
 }

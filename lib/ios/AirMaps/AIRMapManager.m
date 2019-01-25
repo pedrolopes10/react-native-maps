@@ -623,7 +623,7 @@ RCT_EXPORT_METHOD(fitToCoordinates:(nonnull NSNumber *)reactTag
             {
                 coords[i] = coordinates[i].coordinate;
             }
-            MKPolyline *polyline = [MKPolyline polylineWithCoordinates:coords count:coordinates.count];
+            MKGeodesicPolyline *polyline = [MKGeodesicPolyline polylineWithCoordinates:coords count:coordinates.count];
             UIEdgeInsets insets = [self edgeInsetsFrom:edgePadding];
 
             [mapView setVisibleMapRect:[polyline boundingMapRect] edgePadding:insets animated:animated];

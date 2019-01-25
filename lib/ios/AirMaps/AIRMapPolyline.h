@@ -19,7 +19,7 @@
 
 @property (nonatomic, weak) AIRMap *map;
 
-@property (nonatomic, strong) MKPolyline *polyline;
+@property (nonatomic, strong) MKGeodesicPolyline *polyline;
 @property (nonatomic, strong) MKOverlayPathRenderer *renderer;
 
 @property (nonatomic, strong) NSArray<AIRMapCoordinate *> *coordinates;
