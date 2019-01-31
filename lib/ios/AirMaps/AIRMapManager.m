@@ -30,6 +30,8 @@
 
 #import <MapKit/MapKit.h>
 
+#define IS_OS_11_OR_LATER ([[[UIDevice currentDevice] systemVersion] floatValue] >= 11.0)
+
 static NSString *const RCTMapViewKey = @"MapView";
 
 @interface AIRMapManager() <MKMapViewDelegate>
@@ -995,33 +997,27 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
     }
 }
 
-
 #pragma mark Annotation Stuff
 
-
-
-- (void)mapView:(AIRMap *)mapView didSelectAnnotationView:(MKAnnotationView *)view
+- (void)mapView:(AIRMap *)mapView didAddAnnotationViews:(NSArray *)views
 {
-    if ([view.annotation isKindOfClass:[AIRMapMarker class]]) {
-        [(AIRMapMarker *)view.annotation showCalloutView];
-    } else if ([view.annotation isKindOfClass:[MKUserLocation class]] && mapView.userLocationAnnotationTitle != nil && view.annotation.title != mapView.userLocationAnnotationTitle) {
-        [(MKUserLocation*)view.annotation setTitle: mapView.userLocationAnnotationTitle];
-    }
-}
-
-- (void)mapView:(AIRMap *)mapView didDeselectAnnotationView:(MKAnnotationView *)view {
-    if ([view.annotation isKindOfClass:[AIRMapMarker class]]) {
-        [(AIRMapMarker *)view.annotation hideCalloutView];
+    for (MKAnnotationView *view in views)
+    {
+        if ([[view annotation] isKindOfClass:[MKUserLocation class]])
+        {
+            [(MKUserLocation*)view.annotation setTitle: nil];
+            view.layer.zPosition = -1;
+            if (IS_OS_11_OR_LATER) {
+                [view.layer addObserver:self forKeyPath:@"zPosition" options:0 context:nil];
+            }
+            return;
+        }
     }
 }
 
 - (MKAnnotationView *)mapView:(__unused AIRMap *)mapView viewForAnnotation:(AIRMapMarker *)marker
 {
     if (![marker isKindOfClass:[AIRMapMarker class]]) {
-        if ([marker isKindOfClass:[MKUserLocation class]] && mapView.userLocationAnnotationTitle != nil) {
-            [(MKUserLocation*)marker setTitle: mapView.userLocationAnnotationTitle];
-            return nil;
-        }
         return nil;
     }
 
@@ -1029,79 +1025,14 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
     return [marker getAnnotationView];
 }
 
-static int kDragCenterContext;
-
-- (void)mapView:(AIRMap *)mapView
-    annotationView:(MKAnnotationView *)view
-    didChangeDragState:(MKAnnotationViewDragState)newState
-    fromOldState:(MKAnnotationViewDragState)oldState
-{
-    if (![view.annotation isKindOfClass:[AIRMapMarker class]]) return;
-    AIRMapMarker *marker = (AIRMapMarker *)view.annotation;
-
-    BOOL isPinView = [view isKindOfClass:[MKPinAnnotationView class]];
-
-    id event = @{
-                 @"id": marker.identifier ?: @"unknown",
-                 @"coordinate": @{
-                         @"latitude": @(marker.coordinate.latitude),
-                         @"longitude": @(marker.coordinate.longitude)
-                         }
-                 };
-
-    if (newState == MKAnnotationViewDragStateEnding || newState == MKAnnotationViewDragStateCanceling) {
-        if (!isPinView) {
-            [view setDragState:MKAnnotationViewDragStateNone animated:NO];
-        }
-        if (mapView.onMarkerDragEnd) mapView.onMarkerDragEnd(event);
-        if (marker.onDragEnd) marker.onDragEnd(event);
-
-       if(_hasObserver) [view removeObserver:self forKeyPath:@"center"];
-        _hasObserver = NO;
-    } else if (newState == MKAnnotationViewDragStateStarting) {
-        // MapKit doesn't emit continuous drag events. To get around this, we are going to use KVO.
-        [view addObserver:self forKeyPath:@"center" options:NSKeyValueObservingOptionNew context:&kDragCenterContext];
-        _hasObserver = YES;
-        if (mapView.onMarkerDragStart) mapView.onMarkerDragStart(event);
-        if (marker.onDragStart) marker.onDragStart(event);
-    }
-}
-
 - (void)observeValueForKeyPath:(NSString *)keyPath
                       ofObject:(id)object
                         change:(NSDictionary *)change
                        context:(void *)context
 {
-    if ([keyPath isEqualToString:@"center"] && [object isKindOfClass:[MKAnnotationView class]]) {
-        MKAnnotationView *view = (MKAnnotationView *)object;
-        AIRMapMarker *marker = (AIRMapMarker *)view.annotation;
-
-        // a marker we don't control might be getting dragged. Check just in case.
-        if (!marker) return;
-
-        AIRMap *map = marker.map;
-
-        // don't waste time calculating if there are no events to listen to it
-        if (!map.onMarkerDrag && !marker.onDrag) return;
-
-        CGPoint position = CGPointMake(view.center.x - view.centerOffset.x, view.center.y - view.centerOffset.y);
-        CLLocationCoordinate2D coordinate = [map convertPoint:position toCoordinateFromView:map];
-
-        id event = @{
-                @"id": marker.identifier ?: @"unknown",
-                @"position": @{
-                        @"x": @(position.x),
-                        @"y": @(position.y),
-                },
-                @"coordinate": @{
-                        @"latitude": @(coordinate.latitude),
-                        @"longitude": @(coordinate.longitude),
-                }
-        };
-
-        if (map.onMarkerDrag) map.onMarkerDrag(event);
-        if (marker.onDrag) marker.onDrag(event);
-
+    if (IS_OS_11_OR_LATER && [keyPath isEqualToString:@"zPosition"] && [object isKindOfClass:[CALayer class]]) {
+        CALayer *layer = object;
+        layer.zPosition = -1;
     } else {
         // This message is not for me; pass it on to super.
         [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
