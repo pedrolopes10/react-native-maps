@@ -265,12 +265,13 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
     float angle;
     ReadableMap region;
     ReadableMap camera;
-	ReadableMap edgePadding;
+	  ReadableMap edgePadding;
 
     switch (commandId) {
       case SET_CAMERA:
         camera = args.getMap(0);
-        view.animateToCamera(camera, 0, null);
+        edgePadding = args.getMap(1);
+        view.animateToCamera(camera, 0, edgePadding);
         break;
 
       case ANIMATE_CAMERA:

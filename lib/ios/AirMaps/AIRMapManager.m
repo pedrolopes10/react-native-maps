@@ -207,7 +207,8 @@ RCT_EXPORT_METHOD(getCamera:(nonnull NSNumber *)reactTag
 
 
 RCT_EXPORT_METHOD(setCamera:(nonnull NSNumber *)reactTag
-                  camera:(id)json)
+                  camera:(id)json
+                  edgePadding:(NSDictionary *)edgePadding)
 {
     [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
         id view = viewRegistry[reactTag];
@@ -219,15 +220,44 @@ RCT_EXPORT_METHOD(setCamera:(nonnull NSNumber *)reactTag
             // Merge the changes given with the current camera
             MKMapCamera *camera = [RCTConvert MKMapCameraWithDefaults:json existingCamera:[mapView camera]];
 
+            UIEdgeInsets insets = [self edgeInsetsFrom:edgePadding];
+            CLLocationCoordinate2D newCenter = camera.centerCoordinate;
+
+            if (!UIEdgeInsetsEqualToEdgeInsets(insets, UIEdgeInsetsZero)) {
+                CGPoint referencePoint = [mapView convertCoordinate: camera.centerCoordinate toPointToView:mapView];
+                MKCoordinateRegion referenceConversionRegion = [mapView convertRect:CGRectMake(referencePoint.x, referencePoint.y, 0.5, 1) toRegionFromView:mapView];
+
+                CLLocationDegrees latitudePadding = (insets.top - insets.bottom) * referenceConversionRegion.span.latitudeDelta;
+                CLLocationDegrees longitudePadding = (insets.right - insets.left) * referenceConversionRegion.span.longitudeDelta;
+
+                CLLocationDegrees newLatitude =  camera.centerCoordinate.latitude + latitudePadding;
+                CLLocationDegrees newLongitude =  camera.centerCoordinate.longitude + longitudePadding;
+
+                if (newLatitude > 90) {
+                    newLatitude -= 180;
+                }
+
+                if (newLatitude < -90) {
+                    newLatitude += 180;
+                }
+
+                if (newLongitude > 180) {
+                    newLongitude -= 360;
+                }
+
+                if (newLongitude < -180) {
+                    newLongitude += 360;
+                }
+
+                newCenter = CLLocationCoordinate2DMake(newLatitude, newLongitude);
+            }
+
+            camera.centerCoordinate = newCenter;
             // don't emit region change events when we are setting the camera
-            BOOL originalIgnore = mapView.ignoreRegionChanges;
-            mapView.ignoreRegionChanges = YES;
             [mapView setCamera:camera animated:NO];
-            mapView.ignoreRegionChanges = originalIgnore;
         }
     }];
 }
-
 
 RCT_EXPORT_METHOD(animateCamera:(nonnull NSNumber *)reactTag
                   withCamera:(id)json
