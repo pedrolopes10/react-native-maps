@@ -108,20 +108,18 @@ RCT_CUSTOM_VIEW_PROPERTY(initialRegion, MKCoordinateRegion, AIRMap)
     if (json == nil) return;
 
     // don't emit region change events when we are setting the initialRegion
-    BOOL originalIgnore = view.ignoreRegionChanges;
     view.ignoreRegionChanges = YES;
     [view setInitialRegion:[RCTConvert MKCoordinateRegion:json]];
-    view.ignoreRegionChanges = originalIgnore;
+    view.ignoreRegionChanges = NO;
 }
 RCT_CUSTOM_VIEW_PROPERTY(initialCamera, MKMapCamera, AIRMap)
 {
     if (json == nil) return;
 
     // don't emit region change events when we are setting the initialCamera
-    BOOL originalIgnore = view.ignoreRegionChanges;
     view.ignoreRegionChanges = YES;
     [view setInitialCamera:[RCTConvert MKMapCamera:json]];
-    view.ignoreRegionChanges = originalIgnore;
+    view.ignoreRegionChanges = NO;
 }
 
 
@@ -134,10 +132,9 @@ RCT_CUSTOM_VIEW_PROPERTY(region, MKCoordinateRegion, AIRMap)
     if (json == nil) return;
 
     // don't emit region change events when we are setting the region
-    BOOL originalIgnore = view.ignoreRegionChanges;
     view.ignoreRegionChanges = YES;
     [view setRegion:[RCTConvert MKCoordinateRegion:json] animated:NO];
-    view.ignoreRegionChanges = originalIgnore;
+    view.ignoreRegionChanges = NO;
 }
 
 RCT_CUSTOM_VIEW_PROPERTY(camera, MKMapCamera*, AIRMap)
@@ -145,10 +142,9 @@ RCT_CUSTOM_VIEW_PROPERTY(camera, MKMapCamera*, AIRMap)
     if (json == nil) return;
 
     // don't emit region change events when we are setting the camera
-    BOOL originalIgnore = view.ignoreRegionChanges;
     view.ignoreRegionChanges = YES;
     [view setCamera:[RCTConvert MKMapCamera:json] animated:NO];
-    view.ignoreRegionChanges = originalIgnore;
+    view.ignoreRegionChanges = NO;
 }
 
 
@@ -275,7 +271,6 @@ RCT_EXPORT_METHOD(animateCamera:(nonnull NSNumber *)reactTag
             MKMapCamera *camera = [RCTConvert MKMapCameraWithDefaults:json existingCamera:[mapView camera]];
 
             // don't emit region change events when we are setting the camera
-            BOOL originalIgnore = mapView.ignoreRegionChanges;
             mapView.ignoreRegionChanges = YES;
 
             UIEdgeInsets insets = [self edgeInsetsFrom:edgePadding];
@@ -315,7 +310,7 @@ RCT_EXPORT_METHOD(animateCamera:(nonnull NSNumber *)reactTag
             [AIRMap animateWithDuration:duration/1000 animations:^{
                 [mapView setCamera:camera animated:YES];
             } completion:^(BOOL finished){
-                mapView.ignoreRegionChanges = originalIgnore;
+                mapView.ignoreRegionChanges = NO;
             }];
         }
     }];
