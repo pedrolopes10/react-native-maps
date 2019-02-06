@@ -35,6 +35,7 @@
 @property (nonatomic, assign) CLLocationCoordinate2D coordinate;
 @property (nonatomic, strong) UIColor *pinColor;
 @property (nonatomic, assign) NSInteger zIndex;
+@property (nonatomic, assign) BOOL top;
 @property (nonatomic, assign) CLLocationDegrees rotation;
 @property (nonatomic, assign) double opacity;
 

@@ -1035,7 +1035,13 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
             if (IS_OS_11_OR_LATER) {
                 [view.layer addObserver:self forKeyPath:@"zPosition" options:0 context:nil];
             }
-            return;
+        } else {
+            AIRMapMarker *marker = (AIRMapMarker *) [view annotation];
+            if ([marker top]) {
+                [[view superview] bringSubviewToFront:view];
+            } else {
+                [[view superview] sendSubviewToBack:view];
+            }
         }
     }
 }
