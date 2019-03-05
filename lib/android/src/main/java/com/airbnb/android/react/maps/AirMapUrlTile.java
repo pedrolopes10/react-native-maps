@@ -56,6 +56,7 @@ public class AirMapUrlTile extends AirMapFeature {
 
   private String urlTemplate;
   private float zIndex;
+  private float opacity;
   private float maximumZ;
   private float minimumZ;
 
@@ -77,6 +78,13 @@ public class AirMapUrlTile extends AirMapFeature {
     this.zIndex = zIndex;
     if (tileOverlay != null) {
       tileOverlay.setZIndex(zIndex);
+    }
+  }
+
+  public void setOpacity(float opacity) {
+    this.opacity = opacity;
+    if (tileOverlay != null) {
+      tileOverlay.setTransparency(1-opacity);
     }
   }
 
@@ -104,6 +112,7 @@ public class AirMapUrlTile extends AirMapFeature {
   private TileOverlayOptions createTileOverlayOptions() {
     TileOverlayOptions options = new TileOverlayOptions();
     options.zIndex(zIndex);
+    options.transparency(1-opacity);
     this.tileProvider = new AIRMapUrlTileProvider(256, 256, this.urlTemplate);
     options.tileProvider(this.tileProvider);
     return options;
