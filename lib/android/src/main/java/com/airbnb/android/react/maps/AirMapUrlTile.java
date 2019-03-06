@@ -22,10 +22,15 @@ public class AirMapUrlTile extends AirMapFeature {
 
     @Override
     public synchronized URL getTileUrl(int x, int y, int zoom) {
+      int usedY = y;
+
+      if(AirMapUrlTile.this.reversed){
+        usedY = (1 << zoom) - y - 1;
+      }
 
       String s = this.urlTemplate
           .replace("{x}", Integer.toString(x))
-          .replace("{y}", Integer.toString(y))
+          .replace("{y}", Integer.toString(usedY))
           .replace("{z}", Integer.toString(zoom));
       URL url = null;
 
@@ -55,6 +60,7 @@ public class AirMapUrlTile extends AirMapFeature {
   private AIRMapUrlTileProvider tileProvider;
 
   private String urlTemplate;
+  private boolean reversed;
   private float zIndex;
   private float opacity;
   private float maximumZ;
@@ -72,6 +78,10 @@ public class AirMapUrlTile extends AirMapFeature {
     if (tileOverlay != null) {
       tileOverlay.clearTileCache();
     }
+  }
+
+  public void setReversed(boolean reversed) {
+    this.reversed = reversed;
   }
 
   public void setZIndex(float zIndex) {
@@ -112,7 +122,9 @@ public class AirMapUrlTile extends AirMapFeature {
   private TileOverlayOptions createTileOverlayOptions() {
     TileOverlayOptions options = new TileOverlayOptions();
     options.zIndex(zIndex);
-    options.transparency(1-opacity);
+    if(opacity){
+        options.transparency(1-opacity);
+    }
     this.tileProvider = new AIRMapUrlTileProvider(256, 256, this.urlTemplate);
     options.tileProvider(this.tileProvider);
     return options;
