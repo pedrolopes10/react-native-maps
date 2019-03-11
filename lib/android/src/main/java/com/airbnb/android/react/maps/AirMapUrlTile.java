@@ -122,9 +122,6 @@ public class AirMapUrlTile extends AirMapFeature {
   private TileOverlayOptions createTileOverlayOptions() {
     TileOverlayOptions options = new TileOverlayOptions();
     options.zIndex(zIndex);
-    if(opacity){
-        options.transparency(1-opacity);
-    }
     this.tileProvider = new AIRMapUrlTileProvider(256, 256, this.urlTemplate);
     options.tileProvider(this.tileProvider);
     return options;
