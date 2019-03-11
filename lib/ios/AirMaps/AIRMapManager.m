@@ -27,7 +27,8 @@
 #import "AIRMapSnapshot.h"
 #import "RCTConvert+AirMap.h"
 #import "AIRMapOverlay.h"
-
+#import "AIRWeakTimerReference.h"
+#import "AIRWeakMapReference.h"
 #import <MapKit/MapKit.h>
 
 #define IS_OS_11_OR_LATER ([[[UIDevice currentDevice] systemVersion] floatValue] >= 11.0)
@@ -1088,10 +1089,12 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
 {
     [self _regionChanged:mapView];
 
+    AIRWeakTimerReference *weakTarget = [[AIRWeakTimerReference alloc] initWithTarget:self andSelector:@selector(_onTick:)];
+    
     mapView.regionChangeObserveTimer = [NSTimer timerWithTimeInterval:AIRMapRegionChangeObserveInterval
-                                                               target:self
-                                                             selector:@selector(_onTick:)
-                                                             userInfo:@{ RCTMapViewKey: mapView }
+                                                               target:weakTarget
+                                                             selector:@selector(timerDidFire:)
+                                                             userInfo:@{ RCTMapViewKey: [[AIRWeakMapReference alloc] initWithMapView: mapView] }
                                                               repeats:YES];
 
     [[NSRunLoop mainRunLoop] addTimer:mapView.regionChangeObserveTimer forMode:NSRunLoopCommonModes];
@@ -1141,7 +1144,8 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
 
 - (void)_onTick:(NSTimer *)timer
 {
-    [self _regionChanged:timer.userInfo[RCTMapViewKey]];
+    AIRWeakMapReference *weakRef = timer.userInfo[RCTMapViewKey];
+    [self _regionChanged:weakRef.mapView];
 }
 
 - (void)_regionChanged:(AIRMap *)mapView

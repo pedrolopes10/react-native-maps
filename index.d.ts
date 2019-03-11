@@ -241,6 +241,8 @@ declare module "react-native-maps" {
         setMapBoundaries(northEast: LatLng, southWest: LatLng): void;
         getMapBoundaries(): {northEast: LatLng; southWest: LatLng};
         takeSnapshot(options?: SnapshotOptions): Promise<string>;
+        pointForCoordinate(coordinate: LatLng): Promise<Point>;
+        coordinateForPoint(point: Point): Promise<LatLng>;
     }
 
     export class MapViewAnimated extends MapView {
@@ -256,6 +258,7 @@ declare module "react-native-maps" {
         title?: string;
         description?: string;
         image?: ImageURISource | ImageRequireSource;
+        icon?: ImageURISource | ImageRequireSource;
         opacity?: number;
         pinColor?: string;
         coordinate: LatLng | AnimatedRegion;

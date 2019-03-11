@@ -82,7 +82,7 @@ To access event data, you will need to use `e.nativeEvent`. For example, `onPres
 | `animateToBearing` | `bearing: Number`, `duration: Number` | Deprecated. Use `animateCamera` instead.
 | `animateToViewingAngle` | `angle: Number`, `duration: Number` | Deprecated. Use `animateCamera` instead.
 | `getMapBoundaries` | | `Promise<{northEast: LatLng, southWest: LatLng}>`
-| `setMapBoundaries` | `northEast: LatLng`, `southWest: LatLng` | `GoogleMaps only`
+| `setMapBoundaries` | `northEast: LatLng`, `southWest: LatLng` | The boundary is defined by the map's center coordinates, not the device's viewport itself. **Note:** Google Maps only.
 | `setIndoorActiveLevelIndex` | `levelIndex: Number` |
 | `fitToElements` | `animated: Boolean` |
 | `fitToSuppliedMarkers` | `markerIDs: String[], options: { edgePadding: EdgePadding, animated: Boolean }` | If you need to use this in `ComponentDidMount`, make sure you put it in a timeout or it will cause performance problems.
@@ -119,6 +119,13 @@ type Camera = {
    zoom: number
 }
 ```
+
+Latitude and longitude are self explanatory while latitudeDelta and longitudeDelta may not.
+On the [developer.apple.com](https://developer.apple.com/reference/mapkit/mkcoordinatespan/1452417-latitudedelta) website this is how the "latitudeDelta" property is explained:
+
+> The amount of north-to-south distance (measured in degrees) to display on the map. Unlike longitudinal distances, which vary based on the latitude, one degree of latitude is always approximately 111 kilometers (69 miles).
+
+If this is not enough, you can find a [visual explanation on stackoverflow](https://stackoverflow.com/questions/36685372/how-to-zoom-in-out-in-react-native-map/36688156#36688156).
 
 Note that when using the `Camera`, MapKit on iOS and Google Maps differ in how the height is specified. For a cross-platform app, it is necessary
 to specify both the zoom level and the altitude separately.
