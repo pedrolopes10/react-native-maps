@@ -28,6 +28,10 @@ public class AirMapUrlTile extends AirMapFeature {
         usedY = (1 << zoom) - y - 1;
       }
 
+      if (AirMapUrlTile.this.flipY == true) {
+        y = (1 << zoom) - y - 1;
+      }
+
       String s = this.urlTemplate
           .replace("{x}", Integer.toString(x))
           .replace("{y}", Integer.toString(usedY))
@@ -65,6 +69,7 @@ public class AirMapUrlTile extends AirMapFeature {
   private float opacity;
   private float maximumZ;
   private float minimumZ;
+  private boolean flipY;
 
   public AirMapUrlTile(Context context) {
     super(context);
@@ -107,6 +112,13 @@ public class AirMapUrlTile extends AirMapFeature {
 
   public void setMinimumZ(float minimumZ) {
     this.minimumZ = minimumZ;
+    if (tileOverlay != null) {
+      tileOverlay.clearTileCache();
+    }
+  }
+
+  public void setFlipY(boolean flipY) {
+    this.flipY = flipY;
     if (tileOverlay != null) {
       tileOverlay.clearTileCache();
     }
