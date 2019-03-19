@@ -22,19 +22,13 @@ public class AirMapUrlTile extends AirMapFeature {
 
     @Override
     public synchronized URL getTileUrl(int x, int y, int zoom) {
-      int usedY = y;
-
-      if(AirMapUrlTile.this.reversed){
-        usedY = (1 << zoom) - y - 1;
-      }
-
       if (AirMapUrlTile.this.flipY == true) {
         y = (1 << zoom) - y - 1;
       }
 
       String s = this.urlTemplate
           .replace("{x}", Integer.toString(x))
-          .replace("{y}", Integer.toString(usedY))
+          .replace("{y}", Integer.toString(y))
           .replace("{z}", Integer.toString(zoom));
       URL url = null;
 
@@ -64,7 +58,6 @@ public class AirMapUrlTile extends AirMapFeature {
   private AIRMapUrlTileProvider tileProvider;
 
   private String urlTemplate;
-  private boolean reversed;
   private float zIndex;
   private float opacity;
   private float maximumZ;
@@ -83,10 +76,6 @@ public class AirMapUrlTile extends AirMapFeature {
     if (tileOverlay != null) {
       tileOverlay.clearTileCache();
     }
-  }
-
-  public void setReversed(boolean reversed) {
-    this.reversed = reversed;
   }
 
   public void setZIndex(float zIndex) {

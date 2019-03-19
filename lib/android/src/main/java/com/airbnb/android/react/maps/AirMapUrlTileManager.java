@@ -40,11 +40,6 @@ public class AirMapUrlTileManager extends ViewGroupManager<AirMapUrlTile> {
     view.setUrlTemplate(urlTemplate);
   }
 
-  @ReactProp(name = "reversed", defaultBoolean = false)
-  public void setReversed(AirMapUrlTile view, boolean reversed) {
-    view.setReversed(reversed);
-  }
-
   @ReactProp(name = "zIndex", defaultFloat = -1.0f)
   public void setZIndex(AirMapUrlTile view, float zIndex) {
     view.setZIndex(zIndex);
