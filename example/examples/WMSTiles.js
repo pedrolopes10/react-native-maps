@@ -4,27 +4,21 @@ import {
   View,
   Text,
   Dimensions,
-  TouchableOpacity,
 } from 'react-native';
 
-import MapView, { Marker, ProviderPropType } from 'react-native-maps';
+import MapView, { MAP_TYPES, ProviderPropType, WMSTile } from 'react-native-maps';
 
 const { width, height } = Dimensions.get('window');
 
 const ASPECT_RATIO = width / height;
-const LATITUDE = 37.78825;
-const LONGITUDE = -122.4324;
-const LATITUDE_DELTA = 0.0922;
+const LATITUDE = 40.71095;
+const LONGITUDE = -74.00997;
+const LATITUDE_DELTA = 0.0152;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
-let id = 0;
 
-function randomColor() {
-  return `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, 0)}`;
-}
-
-class DefaultMarkers extends React.Component {
-  constructor(props) {
-    super(props);
+class WMSTiles extends React.Component {
+  constructor(props, context) {
+    super(props, context);
 
     this.state = {
       region: {
@@ -33,67 +27,59 @@ class DefaultMarkers extends React.Component {
         latitudeDelta: LATITUDE_DELTA,
         longitudeDelta: LONGITUDE_DELTA,
       },
-      markers: [],
     };
   }
 
-  onMapPress(e) {
-    this.setState({
-      markers: [
-        ...this.state.markers,
-        {
-          coordinate: e.nativeEvent.coordinate,
-          key: id++,
-          color: randomColor(),
-        },
-      ],
-    });
-  }
-
   render() {
+    const { region } = this.state;
     return (
       <View style={styles.container}>
         <MapView
           provider={this.props.provider}
+          mapType={MAP_TYPES.SATELLITE}
           style={styles.map}
-          initialRegion={this.state.region}
-          onPress={(e) => this.onMapPress(e)}
+          initialRegion={region}
         >
-          {this.state.markers.map(marker => (
-            <Marker
-              key={marker.key}
-              coordinate={marker.coordinate}
-              pinColor={marker.color}
-            />
-          ))}
+          <WMSTile
+            urlTemplate="https://demo.geo-solutions.it/geoserver/tiger/wms?service=WMS&version=1.1.0&request=GetMap&layers=tiger:poi&styles=&bbox={minX},{minY},{maxX},{maxY}&width={width}&height={height}&srs=EPSG:900913&format=image/png&transparent=true&format_options=dpi:213"
+            zIndex={1}
+            opacity={0.5}
+            tileSize={512}
+          />
         </MapView>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            onPress={() => this.setState({ markers: [] })}
-            style={styles.bubble}
-          >
-            <Text>Tap to create a marker of random color</Text>
-          </TouchableOpacity>
+          <View style={styles.bubble}>
+            <Text>WMS Tiles</Text>
+          </View>
         </View>
       </View>
     );
   }
 }
 
-DefaultMarkers.propTypes = {
+WMSTiles.propTypes = {
   provider: ProviderPropType,
 };
 
 const styles = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
   map: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   bubble: {
+    flex: 1,
     backgroundColor: 'rgba(255,255,255,0.7)',
     paddingHorizontal: 18,
     paddingVertical: 12,
@@ -116,4 +102,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DefaultMarkers;
+export default WMSTiles;

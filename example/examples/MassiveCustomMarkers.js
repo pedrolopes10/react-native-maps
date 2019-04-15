@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 
 import MapView, { Marker, ProviderPropType } from 'react-native-maps';
+import flagPinkImg from './assets/flag-pink.png';
 
 const { width, height } = Dimensions.get('window');
 
@@ -18,11 +19,7 @@ const LATITUDE_DELTA = 0.0922;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 let id = 0;
 
-function randomColor() {
-  return `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, 0)}`;
-}
-
-class DefaultMarkers extends React.Component {
+class MassiveCustomMarkers extends React.Component {
   constructor(props) {
     super(props);
 
@@ -35,17 +32,31 @@ class DefaultMarkers extends React.Component {
       },
       markers: [],
     };
+
+    this.onMapPress = this.onMapPress.bind(this);
+  }
+
+  generateMarkers(fromCoordinate) {
+    const result = [];
+    const { latitude, longitude } = fromCoordinate;
+    for (let i = 0; i < 100; i++) {
+      const newMarker = {
+        coordinate: {
+          latitude: latitude + (0.001 * i),
+          longitude: longitude + (0.001 * i),
+        },
+        key: `foo${id++}`,
+      };
+      result.push(newMarker);
+    }
+    return result;
   }
 
   onMapPress(e) {
     this.setState({
       markers: [
         ...this.state.markers,
-        {
-          coordinate: e.nativeEvent.coordinate,
-          key: id++,
-          color: randomColor(),
-        },
+        ...this.generateMarkers(e.nativeEvent.coordinate),
       ],
     });
   }
@@ -57,13 +68,14 @@ class DefaultMarkers extends React.Component {
           provider={this.props.provider}
           style={styles.map}
           initialRegion={this.state.region}
-          onPress={(e) => this.onMapPress(e)}
+          onPress={this.onMapPress}
         >
           {this.state.markers.map(marker => (
             <Marker
+              title={marker.key}
+              image={flagPinkImg}
               key={marker.key}
               coordinate={marker.coordinate}
-              pinColor={marker.color}
             />
           ))}
         </MapView>
@@ -72,7 +84,7 @@ class DefaultMarkers extends React.Component {
             onPress={() => this.setState({ markers: [] })}
             style={styles.bubble}
           >
-            <Text>Tap to create a marker of random color</Text>
+            <Text>Tap to create 100 markers</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -80,7 +92,7 @@ class DefaultMarkers extends React.Component {
   }
 }
 
-DefaultMarkers.propTypes = {
+MassiveCustomMarkers.propTypes = {
   provider: ProviderPropType,
 };
 
@@ -116,4 +128,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DefaultMarkers;
+export default MassiveCustomMarkers;

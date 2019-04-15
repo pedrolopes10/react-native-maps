@@ -12,7 +12,7 @@
 | `mapPadding` | `EdgePadding` |  | Adds custom padding to each side of the map. Useful when map elements/markers are obscured. **Note** Google Maps only.
 | `paddingAdjustmentBehavior` | 'always'\|'automatic'\|'never' | 'never' | Indicates how/when to affect padding with safe area insets (`GoogleMaps` in iOS only)
 | `liteMode` | `Boolean` | `false` | Enable lite mode. **Note**: Android only.
-| `mapType` | `String` | `"standard"` | The map type to be displayed. <br/><br/> - standard: standard road map (default)<br/> - none: no map<br/> - satellite: satellite view<br/> - hybrid: satellite view with roads and points of interest overlayed<br/> - terrain: (Android only) topographic view<br/> - mutedStandard: more subtle, makes markers/lines pop more (iOS 11.0+ only)
+| `mapType` | `String` | `"standard"` | The map type to be displayed. <br/><br/> - standard: standard road map (default)<br/> - none: no map **Note** Not available on MapKit<br/> - satellite: satellite view<br/> - hybrid: satellite view with roads and points of interest overlayed<br/> - terrain: (Android only) topographic view<br/> - mutedStandard: more subtle, makes markers/lines pop more (iOS 11.0+ only)
 | `customMapStyle` | `Array` |  | Adds custom styling to the map component. See [README](https://github.com/react-native-community/react-native-maps#customizing-the-map-style) for more information.
 | `showsUserLocation` | `Boolean` | `false` | If `true` the app will ask for the user's location. **NOTE**: You need to add `NSLocationWhenInUseUsageDescription` key in Info.plist to enable geolocation, otherwise it is going to *fail silently*! You will also need to add an explanation for why you need the users location against `NSLocationWhenInUseUsageDescription` in Info.plist. Otherwise Apple may reject your app submission.
 | `userLocationAnnotationTitle` | `String` | | The title of the annotation for current user location. This only works if `showsUserLocation` is true. There is a default value `My Location` set by MapView. **Note**: iOS only.
@@ -20,7 +20,7 @@
 | `showsMyLocationButton` | `Boolean` | `true` | If `false` hide the button to move map to the current user's location.
 | `showsPointsOfInterest` | `Boolean` | `true` | If `false` points of interest won't be displayed on the map.
 | `showsCompass` | `Boolean` | `true` | If `false` compass won't be displayed on the map.
-| `showsScale` | `Boolean` | `true` | A Boolean indicating whether the map shows scale information.
+| `showsScale` | `Boolean` | `true` | A Boolean indicating whether the map shows scale information. **Note**: Apple Maps only.
 | `showsBuildings` | `Boolean` | `true` | A Boolean indicating whether the map displays extruded building information.
 | `showsTraffic` | `Boolean` | `true` | A Boolean value indicating whether the map displays traffic information.
 | `showsIndoors` | `Boolean` | `true` | A Boolean indicating whether indoor maps should be enabled.
