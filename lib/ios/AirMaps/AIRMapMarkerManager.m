@@ -28,10 +28,13 @@ RCT_EXPORT_MODULE()
     // Here we are disabling the marker tap gesture recognizer since we detect it on "handleTap" method of "AIRMapManager".
     //[marker addTapGestureRecognizer];
     marker.bridge = self.bridge;
+    marker.isAccessibilityElement = YES;
+    marker.accessibilityElementsHidden = NO;
     return marker;
 }
 
 RCT_EXPORT_VIEW_PROPERTY(identifier, NSString)
+RCT_REMAP_VIEW_PROPERTY(testID, accessibilityIdentifier, NSString)
 //RCT_EXPORT_VIEW_PROPERTY(reuseIdentifier, NSString)
 RCT_EXPORT_VIEW_PROPERTY(title, NSString)
 RCT_REMAP_VIEW_PROPERTY(description, subtitle, NSString)

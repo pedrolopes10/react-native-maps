@@ -13,6 +13,7 @@
 #import "AIRGoogleMapPolygon.h"
 #import "AIRGoogleMapPolyline.h"
 #import "AIRGoogleMapCircle.h"
+#import "AIRGoogleMapHeatmap.h"
 #import "AIRGoogleMapUrlTile.h"
 #import "AIRGoogleMapWMSTile.h"
 #import "AIRGoogleMapOverlay.h"
@@ -52,6 +53,8 @@ id regionAsJSON(MKCoordinateRegion region) {
 
 - (id)eventFromCoordinate:(CLLocationCoordinate2D)coordinate;
 
+@property (nonatomic, strong) NSMutableDictionary<NSNumber *, NSDictionary*> *origGestureRecognizersMeta;
+
 @end
 
 @implementation AIRGoogleMap
@@ -62,7 +65,6 @@ id regionAsJSON(MKCoordinateRegion region) {
   BOOL _initialCameraSetOnLoad;
   BOOL _didCallOnMapReady;
   BOOL _didMoveToWindow;
-  NSMutableDictionary<NSNumber *, NSDictionary*> *_origGestureRecognizersMeta;
   BOOL _zoomTapEnabled;
 }
 
@@ -74,6 +76,7 @@ id regionAsJSON(MKCoordinateRegion region) {
     _polygons = [NSMutableArray array];
     _polylines = [NSMutableArray array];
     _circles = [NSMutableArray array];
+    _heatmaps = [NSMutableArray array];
     _tiles = [NSMutableArray array];
     _overlays = [NSMutableArray array];
     _initialCamera = nil;
@@ -91,7 +94,7 @@ id regionAsJSON(MKCoordinateRegion region) {
               options:NSKeyValueObservingOptionNew
               context:NULL];
       
-    _origGestureRecognizersMeta = [[NSMutableDictionary alloc] init];
+    self.origGestureRecognizersMeta = [[NSMutableDictionary alloc] init];
   }
   return self;
 }
@@ -149,6 +152,10 @@ id regionAsJSON(MKCoordinateRegion region) {
     AIRGoogleMapOverlay *overlay = (AIRGoogleMapOverlay*)subview;
     overlay.overlay.map = self;
     [self.overlays addObject:overlay];
+  } else if ([subview isKindOfClass:[AIRGoogleMapHeatmap class]]){
+    AIRGoogleMapHeatmap *heatmap = (AIRGoogleMapHeatmap*)subview;
+    heatmap.heatmap.map = self;
+    [self.heatmaps addObject:heatmap];
   } else {
     NSArray<id<RCTComponent>> *childSubviews = [subview reactSubviews];
     for (int i = 0; i < childSubviews.count; i++) {
@@ -189,6 +196,10 @@ id regionAsJSON(MKCoordinateRegion region) {
     AIRGoogleMapOverlay *overlay = (AIRGoogleMapOverlay*)subview;
     overlay.overlay.map = nil;
     [self.overlays removeObject:overlay];
+  } else if ([subview isKindOfClass:[AIRGoogleMapHeatmap class]]){
+    AIRGoogleMapHeatmap *heatmap = (AIRGoogleMapHeatmap*)subview;
+    heatmap.heatmap.map = nil;
+    [self.heatmaps removeObject:heatmap];
   } else {
     NSArray<id<RCTComponent>> *childSubviews = [subview reactSubviews];
     for (int i = 0; i < childSubviews.count; i++) {
@@ -297,6 +308,10 @@ id regionAsJSON(MKCoordinateRegion region) {
   if (_didCallOnMapReady) return;
   _didCallOnMapReady = true;
   if (self.onMapReady) self.onMapReady(@{});
+}
+
+- (void)mapViewDidFinishTileRendering {
+  if (self.onMapLoaded) self.onMapLoaded(@{});
 }
 
 - (BOOL)didTapMarker:(GMSMarker *)marker {
@@ -633,6 +648,7 @@ id regionAsJSON(MKCoordinateRegion region) {
             }
         }
     }
+    free(ivars);
     return action;
 }
 
@@ -642,7 +658,7 @@ id regionAsJSON(MKCoordinateRegion region) {
     NSArray* grs = view.gestureRecognizers;
     for (UIGestureRecognizer* gestureRecognizer in grs) {
         NSNumber* grHash = [NSNumber numberWithUnsignedInteger:gestureRecognizer.hash];
-        if([_origGestureRecognizersMeta objectForKey:grHash] != nil)
+        if([self.origGestureRecognizersMeta objectForKey:grHash] != nil)
             continue; //already patched
         
         //get original handlers
@@ -653,7 +669,10 @@ id regionAsJSON(MKCoordinateRegion region) {
             NSObject* target = [trg valueForKey:@"target"];
             SEL action = [self getActionForTarget:trg];
             isZoomTapGesture = [NSStringFromSelector(action) isEqualToString:@"handleZoomTapGesture:"];
-            [origTargetsActions addObject:@{@"target": target, @"action": NSStringFromSelector(action)}];
+            [origTargetsActions addObject:@{
+                                            @"target": [NSValue valueWithNonretainedObject:target],
+                                            @"action": NSStringFromSelector(action)
+                                            }];
         }
         if (isZoomTapGesture && self.zoomTapEnabled == NO) {
             [view removeGestureRecognizer:gestureRecognizer];
@@ -662,15 +681,16 @@ id regionAsJSON(MKCoordinateRegion region) {
         
         //replace with extendedMapGestureHandler
         for (NSDictionary* origTargetAction in origTargetsActions) {
-            NSObject* target = [origTargetAction objectForKey:@"target"];
+            NSValue* targetValue = [origTargetAction objectForKey:@"target"];
+            NSObject* target = [targetValue nonretainedObjectValue];
             NSString* actionString = [origTargetAction objectForKey:@"action"];
             SEL action = NSSelectorFromString(actionString);
             [gestureRecognizer removeTarget:target action:action];
         }
         [gestureRecognizer addTarget:self action:@selector(extendedMapGestureHandler:)];
         
-        [_origGestureRecognizersMeta setObject:@{@"targets": origTargetsActions}
-                                        forKey:grHash];
+        [self.origGestureRecognizersMeta setObject:@{@"targets": origTargetsActions}
+                                            forKey:grHash];
     }
 }
 
@@ -748,10 +768,11 @@ id regionAsJSON(MKCoordinateRegion region) {
     }
     
     if (performOriginalActions) {
-        NSDictionary* origMeta = [_origGestureRecognizersMeta objectForKey:grHash];
+        NSDictionary* origMeta = [self.origGestureRecognizersMeta objectForKey:grHash];
         NSDictionary* origTargets = [origMeta objectForKey:@"targets"];
         for (NSDictionary* origTarget in origTargets) {
-            NSObject* target = [origTarget objectForKey:@"target"];
+            NSValue* targetValue = [origTarget objectForKey:@"target"];
+            NSObject* target = [targetValue nonretainedObjectValue];
             NSString* actionString = [origTarget objectForKey:@"action"];
             SEL action = NSSelectorFromString(actionString);
 #pragma clang diagnostic push
