@@ -11,7 +11,7 @@
 
 #import <React/RCTBridge.h>
 #import <React/RCTEventDispatcher.h>
-#import <React/RCTImageLoader.h>
+#import <React/RCTImageLoaderProtocol.h>
 #import <React/RCTUtils.h>
 #import <React/UIView+React.h>
 
@@ -28,11 +28,12 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
     NSInteger _zIndexBeforeOpen;
 }
 
-- (void)prepareForReuse {
-    [self prepareForReuse];
-    
-    _rotation = 0;
-    self.transform = CGAffineTransformIdentity;
+- (instancetype)initWithFrame:(CGRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) {
+        [self.layer addObserver:self forKeyPath:@"zPosition" options:NSKeyValueObservingOptionNew context:nil];
+    }
+    return self;
 }
 
 - (void)reactSetFrame:(CGRect)frame
@@ -103,8 +104,6 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
         // In either case, we want to return the AIRMapMarker since it is both an MKAnnotation and an
         // MKAnnotationView all at the same time.
         self.layer.zPosition = self.zIndex;
-        self.transform = CGAffineTransformMakeRotation(self.rotation);
-        
         return self;
     }
 }
@@ -136,7 +135,9 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
         // when this is set, the callout's content will be whatever react views the user has put as the callout's
         // children.
         calloutView.contentView = self.calloutView;
+
     } else {
+
         // if there is no calloutView, it means the user wants to use the default callout behavior with title/subtitle
         // pairs.
         calloutView.title = self.title;
@@ -202,12 +203,12 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
 - (void)_handleTap:(UITapGestureRecognizer *)recognizer {
     AIRMapMarker *marker = self;
     if (!marker) return;
-    
+
     if (marker.selected) {
         CGPoint touchPoint = [recognizer locationInView:marker.map.calloutView];
         CGRect bubbleFrame = [self.calloutView convertRect:marker.map.calloutView.bounds toView:marker.map];
         CGPoint touchPointReal = [recognizer locationInView:self.calloutView];
-        
+
         UIView *calloutView = [marker.map.calloutView hitTest:touchPoint withEvent:nil];
         if (calloutView) {
             // the callout (or its subview) got clicked, not the marker
@@ -221,7 +222,7 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
                 }
                 tmp = tmp.superview;
             }
-            
+
             id event = @{
                          @"action": calloutSubview ? @"callout-inside-press" : @"callout-press",
                          @"id": marker.identifier ?: @"unknown",
@@ -236,7 +237,7 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
                              @"height": @(bubbleFrame.size.height),
                              }
                          };
-            
+
             if (calloutSubview) calloutSubview.onPress(event);
             if (marker.onCalloutPress) marker.onCalloutPress(event);
             if (marker.calloutView && marker.calloutView.onPress) marker.calloutView.onPress(event);
@@ -244,7 +245,7 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
             return;
         }
     }
-    
+
     // the actual marker got clicked
     id event = @{
                  @"action": @"marker-press",
@@ -254,15 +255,15 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
                          @"longitude": @(marker.coordinate.longitude)
                          }
                  };
-    
+
     if (marker.onPress) marker.onPress(event);
     if (marker.map.onMarkerPress) marker.map.onMarkerPress(event);
-    
+
     [marker.map selectAnnotation:marker animated:NO];
 }
 
 - (void)hideCalloutView
-{    
+{
     _calloutIsOpen = NO;
     [self setZIndex:_zIndexBeforeOpen];
     // hide the callout view
@@ -305,15 +306,6 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
   [self setAlpha:opacity];
 }
 
-- (void)setRotation:(CLLocationDegrees)newRotationInDegrees {
-    // set rotation, converting degrees to radians
-    _rotation = newRotationInDegrees * M_PI / 180.0;
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        self.transform = CGAffineTransformMakeRotation(self.rotation);
-    });
-}
-
 - (void)setImageSrc:(NSString *)imageSrc
 {
     _imageSrc = imageSrc;
@@ -322,7 +314,7 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
         _reloadImageCancellationBlock();
         _reloadImageCancellationBlock = nil;
     }
-    _reloadImageCancellationBlock = [_bridge.imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:_imageSrc]
+    _reloadImageCancellationBlock = [[_bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:_imageSrc]
                                                                             size:self.bounds.size
                                                                            scale:RCTScreenScale()
                                                                          clipped:YES
@@ -354,6 +346,20 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
     _zIndexBeforeOpen = zIndex;
     _zIndex = _calloutIsOpen ? zIndex + AIR_CALLOUT_OPEN_ZINDEX_BASELINE : zIndex;
     self.layer.zPosition = zIndex;
+}
+
+- (BOOL)isSelected {
+  return _isPreselected || [super isSelected];
+}
+
+- (void)dealloc {
+    [self.layer removeObserver:self forKeyPath:@"zPosition"];
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
+    if ([keyPath isEqualToString:@"zPosition"]) {
+        self.layer.zPosition = _zIndex;
+    }
 }
 
 @end

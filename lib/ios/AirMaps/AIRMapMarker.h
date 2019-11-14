@@ -38,6 +38,7 @@
 @property (nonatomic, assign) BOOL top;
 @property (nonatomic, assign) CLLocationDegrees rotation;
 @property (nonatomic, assign) double opacity;
+@property (nonatomic, assign) BOOL isPreselected;
 
 @property (nonatomic, copy) RCTBubblingEventBlock onPress;
 @property (nonatomic, copy) RCTDirectEventBlock onSelect;

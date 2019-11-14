@@ -9,8 +9,8 @@ import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.os.Build;
-import android.support.v4.view.GestureDetectorCompat;
-import android.support.v4.view.MotionEventCompat;
+import androidx.core.view.GestureDetectorCompat;
+import androidx.core.view.MotionEventCompat;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -69,7 +69,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import static android.support.v4.content.PermissionChecker.checkSelfPermission;
+import static androidx.core.content.PermissionChecker.checkSelfPermission;
 
 public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     GoogleMap.OnMarkerDragListener, OnMapReadyCallback, GoogleMap.OnPoiClickListener, GoogleMap.OnIndoorStateChangeListener {
@@ -171,6 +171,12 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
             }
             return false;
           }
+
+          @Override
+          public boolean onDoubleTap(MotionEvent ev) {
+            onDoublePress(ev);
+            return false;
+          }
         });
 
     this.addOnLayoutChangeListener(new OnLayoutChangeListener() {
@@ -223,6 +229,7 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
         coordinate.putDouble("timestamp", location.getTime());
         coordinate.putDouble("accuracy", location.getAccuracy());
         coordinate.putDouble("speed", location.getSpeed());
+        coordinate.putDouble("heading", location.getBearing());
         if(android.os.Build.VERSION.SDK_INT >= 18){
         coordinate.putBoolean("isFromMockProvider", location.isFromMockProvider());
         }
@@ -1126,6 +1133,13 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     LatLng coords = this.map.getProjection().fromScreenLocation(point);
     WritableMap event = makeClickEventData(coords);
     manager.pushEvent(context, this, "onPanDrag", event);
+  }
+
+  public void onDoublePress(MotionEvent ev) {
+    Point point = new Point((int) ev.getX(), (int) ev.getY());
+    LatLng coords = this.map.getProjection().fromScreenLocation(point);
+    WritableMap event = makeClickEventData(coords);
+    manager.pushEvent(context, this, "onDoublePress", event);
   }
 
   public void setKmlSrc(String kmlSrc) {

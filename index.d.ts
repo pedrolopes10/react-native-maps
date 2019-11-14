@@ -127,6 +127,7 @@ declare module "react-native-maps" {
         timestamp: number;
         accuracy: number;
         speed: number;
+        heading: number;
         isFromMockProvider: boolean;
       };
     };
@@ -213,6 +214,7 @@ declare module "react-native-maps" {
     initialCamera?: Camera;
     liteMode?: boolean;
     mapPadding?: EdgePadding;
+    paddingAdjustmentBehavior?: "always" | "automatic" | "never";
     maxDelta?: number;
     minDelta?: number;
     legalLabelInsets?: EdgeInsets;
@@ -223,6 +225,7 @@ declare module "react-native-maps" {
     onRegionChange?: (region: Region) => void;
     onRegionChangeComplete?: (region: Region) => void;
     onPress?: (event: MapEvent) => void;
+    onDoublePress?: (event: MapEvent) => void;
     onLongPress?: (event: MapEvent) => void;
     onUserLocationChange?: (event: EventUserLocation) => void;
     onPanDrag?: (event: MapEvent) => void;
@@ -426,9 +429,12 @@ declare module "react-native-maps" {
 
   export interface MapUrlTileProps extends ViewProperties {
     urlTemplate: string;
+    minimumZ?: number;
     maximumZ?: number;
     zIndex?: number;
     tileSize?: number;
+    shouldReplaceMapContent?:boolean;
+    flipY?: boolean;
   }
 
   export class UrlTile extends React.Component<MapUrlTileProps, any> {}
