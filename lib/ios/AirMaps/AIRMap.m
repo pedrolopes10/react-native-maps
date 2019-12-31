@@ -260,39 +260,8 @@ const NSInteger AIRMapMaxZoomLevel = 20;
 // See this for some discussion of why we need to override this: https://github.com/nfarina/calloutview/pull/9
 - (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
 
-    CGPoint touchPoint = [self.calloutView convertPoint:point fromView:self];
-    UIView *touchedView = [self.calloutView hitTest:touchPoint withEvent:event];
-    
-    if (touchedView) {
-        UIWindow* win = [[[UIApplication sharedApplication] windows] firstObject];
-        AIRMapCalloutSubview* calloutSubview = nil;
-        AIRMapCallout* callout = nil;
-        AIRMapMarker* marker = nil;
-        
-        UIView* tmp = touchedView;
-        while (tmp && tmp != win && tmp != self.calloutView) {
-            if ([tmp respondsToSelector:@selector(onPress)]) {
-                calloutSubview = (AIRMapCalloutSubview*) tmp;
-            }
-            if ([tmp isKindOfClass:[AIRMapCallout class]]) {
-                callout = (AIRMapCallout*) tmp;
-                break;
-            }
-            tmp = tmp.superview;
-        }
-        
-        if (callout) {
-            marker = [self markerForCallout:callout];
-            if (marker) {
-                CGPoint touchPointReal = [marker.calloutView convertPoint:point fromView:self];
-                if (![callout isPointInside:touchPointReal]) {
-                    return [super hitTest:point withEvent:event];
-                }
-            }
-        }
-        
-        return calloutSubview ? calloutSubview : touchedView;
-    }
+    UIView *calloutMaybe = [self.calloutView hitTest:[self.calloutView convertPoint:point fromView:self] withEvent:event];
+    if (calloutMaybe) return calloutMaybe;
 
     return [super hitTest:point withEvent:event];
 }
