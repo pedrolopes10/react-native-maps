@@ -147,7 +147,8 @@ RCT_EXPORT_METHOD(setCamera:(nonnull NSNumber *)reactTag
 
 RCT_EXPORT_METHOD(animateCamera:(nonnull NSNumber *)reactTag
                   withCamera:(id)json
-                  withDuration:(CGFloat)duration)
+                  withDuration:(CGFloat)duration
+                  edgePadding:(NSDictionary *)edgePadding)
 {
     [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
         id view = viewRegistry[reactTag];
