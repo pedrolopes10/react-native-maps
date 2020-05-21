@@ -166,6 +166,21 @@ declare module "react-native-maps" {
     position: Point;
   };
 
+  export type IndoorBuilding = {
+    underground: boolean,
+    activeLevelIndex: number,
+    levels: Array<IndoorLevel>,
+  }
+
+  export type IndoorLevel = {
+    index: number,
+    name: string,
+    shortName: string,
+  }
+
+  export interface IndoorBuildingEvent 
+    extends NativeSyntheticEvent<{IndoorBuilding:IndoorBuilding}> {}
+
   /**
    * onKmlReady parameter
    */
@@ -184,6 +199,9 @@ declare module "react-native-maps" {
     provider?: "google" | null;
     customMapStyle?: MapStyleElement[];
     customMapStyleString?: string;
+    userLocationPriority?: "balanced" | "high" | "low" | "passive";
+    userLocationUpdateInterval?: number;
+    userLocationFastestInterval?: number;
     showsUserLocation?: boolean;
     userLocationAnnotationTitle?: string;
     showsMyLocationButton?: boolean;
@@ -243,30 +261,43 @@ declare module "react-native-maps" {
     onMarkerDragStart?: (event: MapEvent) => void;
     onMarkerDrag?: (event: MapEvent) => void;
     onMarkerDragEnd?: (event: MapEvent) => void;
+    onIndoorBuildingFocused?: (event: IndoorBuildingEvent) => void; 
 
     minZoomLevel?: number;
     maxZoomLevel?: number;
     kmlSrc?: string;
   }
 
-    export default class MapView extends React.Component<MapViewProps, any> {
-        getCamera(): Promise<Camera>;
-        setCamera(camera: Partial<Camera>, opts?: {edgePadding?: EdgePadding}): void;
-        animateCamera(camera: Partial<Camera>, opts?: {duration?: number, edgePadding?: EdgePadding}): void;
-        animateToNavigation(location: LatLng, bearing: number, angle: number, duration?: number): void;
-        animateToRegion(region: Region, duration?: number): void;
-        animateToCoordinate(latLng: LatLng, duration?: number): void;
-        animateToBearing(bearing: number, duration?: number): void;
-        animateToViewingAngle(angle: number, duration?: number): void;
-        fitToElements(animated: boolean, duration?: number, options?: { edgePadding?: EdgePadding}): void;
-        fitToSuppliedMarkers(markers: string[], options?: { edgePadding?: EdgePadding, animated?: boolean }): void;
-        fitToCoordinates(coordinates?: LatLng[], options?: { edgePadding?: EdgePadding, animated?: boolean }): void;
-        setMapBoundaries(northEast: LatLng, southWest: LatLng): void;
-        getMapBoundaries(): {northEast: LatLng; southWest: LatLng};
-        takeSnapshot(options?: SnapshotOptions): Promise<string>;
-        pointForCoordinate(coordinate: LatLng): Promise<Point>;
-        coordinateForPoint(point: Point): Promise<LatLng>;
-    }
+  export default class MapView extends React.Component<MapViewProps, any> {
+    getCamera(): Promise<Camera>;
+    setCamera(camera: Partial<Camera>, opts?: {edgePadding?: EdgePadding}): void;
+    animateCamera(camera: Partial<Camera>, opts?: { duration?: number, edgePadding?: EdgePadding }): void;
+    animateToNavigation(
+      location: LatLng,
+      bearing: number,
+      angle: number,
+      duration?: number
+    ): void;
+    animateToRegion(region: Region, duration?: number): void;
+    animateToCoordinate(latLng: LatLng, duration?: number): void;
+    animateToBearing(bearing: number, duration?: number): void;
+    animateToViewingAngle(angle: number, duration?: number): void;
+    fitToElements(animated: boolean, duration?: number, options?: { edgePadding?: EdgePadding}): void;
+    fitToSuppliedMarkers(
+      markers: string[],
+      options?: { edgePadding?: EdgePadding; animated?: boolean }
+    ): void;
+    fitToCoordinates(
+      coordinates?: LatLng[],
+      options?: { edgePadding?: EdgePadding; animated?: boolean }
+    ): void;
+    setMapBoundaries(northEast: LatLng, southWest: LatLng): void;
+    getMapBoundaries(): Promise<{ northEast: LatLng; southWest: LatLng }>;
+    takeSnapshot(options?: SnapshotOptions): Promise<string>;
+    pointForCoordinate(coordinate: LatLng): Promise<Point>;
+    coordinateForPoint(point: Point): Promise<LatLng>;
+    setIndoorActiveLevelIndex(index:number): void;
+  }
 
   export class MapViewAnimated extends MapView {}
 
@@ -323,6 +354,11 @@ declare module "react-native-maps" {
      * __iOS only__
      */
     redrawCallout(): void;
+    /**
+     * Causes a redraw of the marker. Useful when there are updates to the 
+     * marker and `tracksViewChanges` comes with a cost that is too high.
+     */
+    redraw(): void
     /**
      * Animates marker movement.
      * __Android only__
@@ -501,6 +537,21 @@ declare module "react-native-maps" {
   }
 
   export class Heatmap extends React.Component<MapHeatmapProps, any> {}
+
+  // =======================================================================
+  //  Geojson
+  // =======================================================================
+
+  import GeoJSON from 'geojson';
+
+  export interface GeojsonProps {
+    geojson: GeoJSON.GeoJSON;
+    strokeColor?: string;
+    fillColor?: string;
+    strokeWidth?: number;
+  }
+
+  export class Geojson extends React.Component<GeojsonProps, any> {}
 
   // =======================================================================
   //  Constants

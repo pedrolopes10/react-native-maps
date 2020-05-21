@@ -105,9 +105,6 @@ post_install do |installer|
         config.build_settings['CLANG_ENABLE_MODULES'] = 'No'
       end
     end
-    if target.name == "React"
-      target.remove_from_project
-    end
   end
 end
 ```
@@ -126,6 +123,9 @@ and open the produced workspace file (`.xcworkspace`) in XCode to build your pro
 cd ios
 pod install
 ```
+### App store submission
+
+The app's `Info.plist` file must contain a `NSLocationWhenInUseUsageDescription` with a user-facing purpose string explaining clearly and completely why your app needs the location, otherwise Apple will reject your app submission.
 
 ### Enabling Google Maps on iOS (React Native all versions)
 
@@ -225,7 +225,7 @@ ext {
     buildToolsVersion   = "xxx"
     minSdkVersion       = xxx
     supportLibVersion   = "xxx"
-    playServicesVersion = "xxx" // or set latest version
+    playServicesVersion = "17.0.0" // or find latest version
     androidMapsUtilsVersion = "xxx"
 }
 ```
@@ -238,12 +238,13 @@ buildscript {
         compileSdkVersion = xxx
         targetSdkVersion = xxx
         supportLibVersion = "xxx"
-        playServicesVersion = "xxx" // or set latest version
+        playServicesVersion = "17.0.0" // or find latest version
         androidMapsUtilsVersion = "xxx"
     }
 }
 ...
 ```
+You can find the latest `playServicesVersion` by checking [https://developers.google.com/android/guides/releases](https://developers.google.com/android/guides/releases) and searching for `gms:play-services-maps:`
 
 3.2 (React Native all versions) If you do **not** have *project-wide properties* defined and have a
 different play-services version than the one included in this library,
@@ -272,6 +273,9 @@ dependencies {
    <meta-data
      android:name="com.google.android.geo.API_KEY"
      android:value="Your Google maps API Key Here"/>
+  
+   <!-- You will also only need to add this uses-libray tag -->
+   <uses-library android:name="org.apache.http.legacy" android:required="false"/>
 </application>
 ```
 > Note: As shown above, `com.google.android.geo.API_KEY` is the
