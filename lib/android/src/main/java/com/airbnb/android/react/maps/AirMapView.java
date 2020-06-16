@@ -1146,17 +1146,21 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
   }
 
   public void onPanDrag(MotionEvent ev) {
-    Point point = new Point((int) ev.getX(), (int) ev.getY());
-    LatLng coords = this.map.getProjection().fromScreenLocation(point);
-    WritableMap event = makeClickEventData(coords);
-    manager.pushEvent(context, this, "onPanDrag", event);
+      if(this.map != null) {
+        Point point = new Point((int) ev.getX(), (int) ev.getY());
+        LatLng coords = this.map.getProjection().fromScreenLocation(point);
+        WritableMap event = makeClickEventData(coords);
+        manager.pushEvent(context, this, "onPanDrag", event);
+      }
   }
 
   public void onDoublePress(MotionEvent ev) {
-    Point point = new Point((int) ev.getX(), (int) ev.getY());
-    LatLng coords = this.map.getProjection().fromScreenLocation(point);
-    WritableMap event = makeClickEventData(coords);
-    manager.pushEvent(context, this, "onDoublePress", event);
+      if(this.map != null) {
+        Point point = new Point((int) ev.getX(), (int) ev.getY());
+        LatLng coords = this.map.getProjection().fromScreenLocation(point);
+        WritableMap event = makeClickEventData(coords);
+        manager.pushEvent(context, this, "onDoublePress", event);
+      }
   }
 
   public void setKmlSrc(String kmlSrc) {

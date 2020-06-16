@@ -236,6 +236,8 @@ public class AirMapUrlTile extends AirMapFeature {
 
   @Override
   public void removeFromMap(GoogleMap map) {
-    tileOverlay.remove();
+    if (tileOverlay != null) {
+        tileOverlay.remove();
+    }
   }
 }
