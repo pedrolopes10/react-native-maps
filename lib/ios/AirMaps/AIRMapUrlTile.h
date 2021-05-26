@@ -28,6 +28,7 @@
 @property BOOL flipY;
 @property BOOL shouldReplaceMapContent;
 @property CGFloat tileSize;
+@property CGFloat opacity;
 
 #pragma mark MKOverlay protocol
 

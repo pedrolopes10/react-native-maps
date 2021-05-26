@@ -49,6 +49,13 @@
   }
 }
 
+- (void)setOpacity:(CGFloat)opacity{
+    _opacity = opacity;
+    if(self.renderer){
+        self.renderer.alpha = opacity;
+    }
+}
+
 - (void)setUrlTemplate:(NSString *)urlTemplate{
     _urlTemplate = urlTemplate;
     _urlTemplateSet = YES;
@@ -83,6 +90,9 @@
         self.tileOverlay.tileSize = CGSizeMake(self.tileSize, self.tileSize);
     }
     self.renderer = [[MKTileOverlayRenderer alloc] initWithTileOverlay:self.tileOverlay];
+    if (self.opacity) {
+        self.renderer.alpha = self.opacity;
+    }
 }
 
 - (void) update
