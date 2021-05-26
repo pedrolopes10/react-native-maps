@@ -218,7 +218,7 @@ RCT_EXPORT_METHOD(getCamera:(nonnull NSNumber *)reactTag
                       },
                       @"pitch": @(camera.pitch),
                       @"heading": @(camera.heading),
-                      @"altitude": @(camera.altitude),
+                      @"centerCoordinateDistance": @(camera.centerCoordinateDistance),
             });
         }
     }];

@@ -122,7 +122,7 @@ type Camera = {
    heading: number
 
    // Only on iOS MapKit, in meters. The property is ignored by Google Maps.
-   altitude: number.
+   centerCoordinateDistance: number.
 
    // Only when using Google Maps.
    zoom: number
