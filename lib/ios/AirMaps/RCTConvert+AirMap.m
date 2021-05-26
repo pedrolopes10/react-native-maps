@@ -47,8 +47,8 @@
     if (json[@"pitch"]) {
         camera.pitch = [self double:json[@"pitch"]];
     }
-    if (json[@"centerCoordinateDistance"]) {
-        camera.centerCoordinateDistance = [self double:json[@"centerCoordinateDistance"]];
+    if (json[@"altitude"]) {
+        camera.altitude = [self double:json[@"altitude"]];
     }
     if (json[@"heading"]) {
         camera.heading = [self double:json[@"heading"]];
