@@ -12,20 +12,22 @@
 | `mapPadding` | `EdgePadding` |  | Adds custom padding to each side of the map. Useful when map elements/markers are obscured.
 | `paddingAdjustmentBehavior` | 'always' \| 'automatic' \| 'never' | 'never' | Indicates how/when to affect padding with safe area insets (`GoogleMaps` in iOS only)
 | `liteMode` | `Boolean` | `false` | Enable lite mode. **Note**: Android only.
-| `mapType` | `String` | `"standard"` | The map type to be displayed. <br/><br/> - standard: standard road map (default)<br/> - none: no map **Note** Not available on MapKit<br/> - satellite: satellite view<br/> - hybrid: satellite view with roads and points of interest overlayed<br/> - terrain: (Android only) topographic view<br/> - mutedStandard: more subtle, makes markers/lines pop more (iOS 11.0+ only)
-| `customMapStyle` | `Array` |  | Adds custom styling to the map component. See [README](https://github.com/react-native-community/react-native-maps#customizing-the-map-style) for more information.
+| `mapType` | `String` | `"standard"` | The map type to be displayed. <br/><br/> - standard: standard road map (default)<br/> - none: no map **Note** Not available on MapKit<br/> - satellite: satellite view<br/> - hybrid: satellite view with roads and points of interest overlayed<br/> - terrain: topographic view<br/> - mutedStandard: more subtle, makes markers/lines pop more (iOS 11.0+ only)
+| `customMapStyle` | `Array` |  | Adds custom styling to the map component. See [README](https://github.com/react-native-maps/react-native-maps#customizing-the-map-style) for more information.
+| `userInterfaceStyle` | 'light' \| 'dark'  |  | Sets the map to the style selected.  Default is whatever the system settings is. **Note:** iOS Maps only (aka MapKit).
 | `showsUserLocation` | `Boolean` | `false` | If `true` the app will ask for the user's location. **NOTE**: You need to add `NSLocationWhenInUseUsageDescription` key in Info.plist to enable geolocation, otherwise it is going to *fail silently*! You will also need to add an explanation for why you need the users location against `NSLocationWhenInUseUsageDescription` in Info.plist. Otherwise Apple may reject your app submission.
 | `userLocationPriority` | 'balanced'\|'high'\|'low'\|'passive' | 'high' | Set power priority of user location tracking. See [Google APIs documentation](https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest.html). **Note:** Android only.
 | `userLocationUpdateInterval` | `Number` | 5000 | Interval of user location updates in milliseconds. See [Google APIs documentation](https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest.html). **Note:** Android only.
 | `userLocationFastestInterval` | `Number` | 5000 | Fastest interval the application will actively acquire locations. See [Google APIs documentation](https://developers.google.com/android/reference/com/google/android/gms/location/LocationRequest.html). **Note:** Android only.
 | `userLocationAnnotationTitle` | `String` | | The title of the annotation for current user location. This only works if `showsUserLocation` is true. There is a default value `My Location` set by MapView. **Note**: iOS only.
 | `followsUserLocation` | `Boolean` | `false` | If `true` the map will focus on the user's location. This only works if `showsUserLocation` is true and the user has shared their location. **Note**: Apple Maps only.
+| `userLocationCalloutEnabled` | `Boolean` | `false` |  If `true` clicking user location will show the default callout for userLocation annotation. **Note**: Apple Maps only.
 | `showsMyLocationButton` | `Boolean` | `true` | If `false` hide the button to move map to the current user's location.
 | `showsPointsOfInterest` | `Boolean` | `true` | If `false` points of interest won't be displayed on the map.
 | `showsCompass` | `Boolean` | `true` | If `false` compass won't be displayed on the map.
 | `showsScale` | `Boolean` | `true` | A Boolean indicating whether the map shows scale information. **Note**: Apple Maps only.
 | `showsBuildings` | `Boolean` | `true` | A Boolean indicating whether the map displays extruded building information.
-| `showsTraffic` | `Boolean` | `true` | A Boolean value indicating whether the map displays traffic information.
+| `showsTraffic` | `Boolean` | `false` | A Boolean value indicating whether the map displays traffic information.
 | `showsIndoors` | `Boolean` | `true` | A Boolean indicating whether indoor maps should be enabled.
 | `showsIndoorLevelPicker` | `Boolean` | `false` | A Boolean indicating whether indoor level picker should be enabled. **Note:** Google Maps only (either Android or iOS with `PROVIDER_GOOGLE`).
 | `zoomEnabled` | `Boolean` | `true` | If `false` the user won't be able to pinch/zoom the map.
@@ -35,6 +37,7 @@
 | `maxZoomLevel` | `Number` | `20` | Maximum zoom value for the map, must be between 0 and 20
 | `rotateEnabled` | `Boolean` | `true` | If `false` the user won't be able to pinch/rotate the map.
 | `scrollEnabled` | `Boolean` | `true` | If `false` the user won't be able to change the map region being displayed.
+| `scrollDuringRotateOrZoomEnabled` | `Boolean` | `true` | If `false` the map will stay centered while rotating or zooming. **Note:** Google Maps only
 | `pitchEnabled` | `Boolean` | `true` | If `false` the user won't be able to adjust the camera’s pitch angle.
 | `toolbarEnabled` | `Boolean` | `true` | `Android only` If `false` will hide 'Navigate' and 'Open in Maps' buttons on marker press
 | `cacheEnabled` | `Boolean` | `false` | If `true` map will be cached and displayed as an image instead of being interactable, for performance usage. **Note:** Apple Maps only
@@ -57,8 +60,8 @@ To access event data, you will need to use `e.nativeEvent`. For example, `onPres
 |---|---|---|
 | `onMapReady` |  | Callback that is called once the map is fully loaded.
 | `onKmlReady` | `KmlContainer` | Callback that is called once the kml is fully loaded.
-| `onRegionChange` | `Region` | Callback that is called continuously when the region changes, such as when a user is dragging the map.
-| `onRegionChangeComplete` | `Region` | Callback that is called once when the region changes, such as when the user is done moving the map.
+| `onRegionChange` | (`Region`, `{isGesture: boolean}`) | Callback that is called continuously when the region changes, such as when a user is dragging the map. The second parameter is an object containing more details about the move. `isGesture` property indicates if the move was from the user (true) or an animation (false). **Note**: `isGesture` is supported by Google Maps only.
+| `onRegionChangeComplete` | (`Region`, `{isGesture: boolean}`) | Callback that is called once when the region changes, such as when the user is done moving the map.  The second parameter is an object containing more details about the move. `isGesture` property indicates if the move was from the user (true) or an animation (false). **Note**: `isGesture` is supported by Google Maps only.
 | `onUserLocationChange` | `{ coordinate: Location }` | Callback that is called when the underlying map figures our users current location (coordinate also includes isFromMockProvider value for Android API 18 and above). Make sure **showsUserLocation** is set to *true*.
 | `onPress` | `{ coordinate: LatLng, position: Point }` | Callback that is called when user taps on the map.
 | `onDoublePress` | `{ coordinate: LatLng, position: Point }` | Callback that is called when user double taps on the map.
@@ -92,9 +95,10 @@ To access event data, you will need to use `e.nativeEvent`. For example, `onPres
 | `getMapBoundaries` | | `Promise<{northEast: LatLng, southWest: LatLng}>`
 | `setMapBoundaries` | `northEast: LatLng`, `southWest: LatLng` | The boundary is defined by the map's center coordinates, not the device's viewport itself. **Note:** Google Maps only.
 | `setIndoorActiveLevelIndex` | `levelIndex: Number` |
-| `fitToElements` | `animated: Boolean` |
-| `fitToSuppliedMarkers` | `markerIDs: String[], options: { edgePadding: EdgePadding, animated: Boolean }` | If you need to use this in `ComponentDidMount`, make sure you put it in a timeout or it will cause performance problems.
+| `fitToElements` | `options: { edgePadding: EdgePadding, animated: Boolean }` | **Note** edgePadding is Google Maps only
+| `fitToSuppliedMarkers` | `markerIDs: String[], options: { edgePadding: EdgePadding, animated: Boolean }` | If you need to use this in `ComponentDidMount`, make sure you put it in a timeout or it will cause performance problems. **Note** edgePadding is Google Maps only
 | `fitToCoordinates` | `coordinates: Array<LatLng>, options: { edgePadding: EdgePadding, animated: Boolean }` | If called in `ComponentDidMount` in android, it will cause an exception. It is recommended to call it from the MapView `onLayout` event.
+| `addressForCoordinate` | `coordinate: LatLng` | Converts a map coordinate to a address (`Address`). Returns a `Promise<Address>`.
 | `pointForCoordinate` | `coordinate: LatLng` | Converts a map coordinate to a view coordinate (`Point`). Returns a `Promise<Point>`.
 | `coordinateForPoint` | `point: Point` | Converts a view coordinate (`Point`) to a map coordinate. Returns a `Promise<Coordinate>`.
 | `getMarkersFrames` | `onlyVisible: Boolean` | Get markers' centers and frames in view coordinates. Returns a `Promise<{ "markerID" : { point: Point, frame: Frame } }>`. **Note**: iOS only.
@@ -119,10 +123,10 @@ type Camera = {
        longitude: number,
    },
    pitch: number,
-   heading: number
+   heading: number,
 
    // Only on iOS MapKit, in meters. The property is ignored by Google Maps.
-   altitude: number.
+   altitude: number,
 
    // Only when using Google Maps.
    zoom: number
@@ -229,5 +233,20 @@ type IndoorLevel {
   index: Number,
   name: String,
   shortName: String,
+}
+```
+
+```
+type Address {
+  name: String,
+  thoroughfare: String,
+  subThoroughfare: String,
+  locality: String,
+  subLocality: String,
+  administrativeArea: String,
+  subAdministrativeArea: String,
+  postalCode: String,
+  countryCode: String,
+  country: String,
 }
 ```
