@@ -363,7 +363,7 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
         break;
 
       case FIT_TO_ELEMENTS:
-        view.fitToElements(args.getMap(0), args.getBoolean(1));
+        view.fitToElements(args.getMap(0), args.getBoolean(1), args.getInt(2));
         break;
 
       case FIT_TO_SUPPLIED_MARKERS:
