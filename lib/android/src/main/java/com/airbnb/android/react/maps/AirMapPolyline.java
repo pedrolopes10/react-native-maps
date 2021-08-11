@@ -36,6 +36,31 @@ public class AirMapPolyline extends AirMapFeature {
     this.type = type;
   }
 
+  public void setSyncedCoordsColors(ReadableArray syncedCoordsColors) {
+    this.coordinates = new ArrayList<>(syncedCoordsColors.getArray(0).size());
+    for (int i = 0; i < syncedCoordsColors.getArray(0).size(); i++) {
+      ReadableMap coordinate = syncedCoordsColors.getArray(0).getMap(i);
+      this.coordinates.add(i,
+          new LatLng(coordinate.getDouble("latitude"), coordinate.getDouble("longitude")));
+    }
+
+    if(syncedCoordsColors.getArray(1) != null){
+        this.strokeColors = new ArrayList<>(syncedCoordsColors.getArray(1).size());
+        for (int i = 0; i < syncedCoordsColors.getArray(1).size(); i++) {
+          String strokeColor = syncedCoordsColors.getArray(1).getString(i);
+          this.strokeColors.add(i, strokeColor);
+        }
+    }
+
+    if (polyline != null && (type.equals("fake") || type.equals("single"))) {
+        polyline.setPoints(this.coordinates);
+    } else if (polyline != null && type.equals("actual")){
+        removeFromMap(this.map);
+        createPolyline();
+    }
+  }
+
+  /*
   public void setStrokeColors(ReadableArray strokeColors) {
     if(strokeColors != null){
         this.strokeColors = new ArrayList<>(strokeColors.size());
@@ -60,7 +85,7 @@ public class AirMapPolyline extends AirMapFeature {
         removeFromMap(this.map);
         createPolyline();
     }
-  }
+  }*/
 
   public void setColor(int color) {
     this.color = color;
