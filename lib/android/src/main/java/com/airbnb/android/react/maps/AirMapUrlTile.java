@@ -17,6 +17,7 @@ import com.google.android.gms.maps.model.UrlTileProvider;
 import java.io.ByteArrayOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Random;
 
 public class AirMapUrlTile extends AirMapFeature {
   class CanvasTileProvider implements TileProvider {
@@ -109,10 +110,14 @@ public class AirMapUrlTile extends AirMapFeature {
 
   class AIRMapUrlTileProvider extends UrlTileProvider {
     private String urlTemplate;
+    private String urlCdn;
+    private String urlCdnSuffix;
 
-    public AIRMapUrlTileProvider(int width, int height, String urlTemplate) {
+    public AIRMapUrlTileProvider(int width, int height, String urlTemplate, String urlCdn, String urlCdnSuffix) {
       super(width, height);
       this.urlTemplate = urlTemplate;
+      this.urlCdn = urlCdn;
+      this.urlCdnSuffix = urlCdnSuffix;
     }
 
     @Override
@@ -126,6 +131,14 @@ public class AirMapUrlTile extends AirMapFeature {
           .replace("{y}", Integer.toString(y))
           .replace("{z}", Integer.toString(zoom));
       URL url = null;
+
+      if(this.urlCdn != null && this.urlCdnSuffix != null){
+          String[] cdn = this.urlCdn.split(",");
+          String[] cdnSuffix = this.urlCdnSuffix.split(",");
+          int rnd = new Random().nextInt(cdnSuffix.length);
+          String cdnString = cdn[1].replace("{cdn}", cdnSuffix[rnd]);
+          s = s.replace(cdn[0], cdnString);
+      }
 
       if(AirMapUrlTile.this.maximumZ > 0 && zoom > maximumZ) {
         return url;
@@ -146,6 +159,14 @@ public class AirMapUrlTile extends AirMapFeature {
     public void setUrlTemplate(String urlTemplate) {
       this.urlTemplate = urlTemplate;
     }
+
+    public void setUrlCdn(String urlCdn) {
+      this.urlCdn = urlCdn;
+    }
+
+    public void setUrlCdnSuffix(String urlCdnSuffix) {
+      this.urlCdnSuffix = urlCdnSuffix;
+    }
   }
 
   private TileOverlayOptions tileOverlayOptions;
@@ -153,6 +174,8 @@ public class AirMapUrlTile extends AirMapFeature {
   private CanvasTileProvider tileProvider;
 
   private String urlTemplate;
+  private String urlCdn;
+  private String urlCdnSuffix;
   private float zIndex;
   private float opacity;
   private float maximumZ;
@@ -167,6 +190,26 @@ public class AirMapUrlTile extends AirMapFeature {
     this.urlTemplate = urlTemplate;
     if (tileProvider != null) {
       tileProvider.mTileProvider.setUrlTemplate(urlTemplate);
+    }
+    if (tileOverlay != null) {
+      tileOverlay.clearTileCache();
+    }
+  }
+
+  public void setUrlCdn(String urlCdn) {
+    this.urlCdn = urlCdn;
+    if (tileProvider != null) {
+      tileProvider.mTileProvider.setUrlCdn(urlCdn);
+    }
+    if (tileOverlay != null) {
+      tileOverlay.clearTileCache();
+    }
+  }
+
+  public void setUrlCdnSuffix(String urlCdnSuffix) {
+    this.urlCdnSuffix = urlCdnSuffix;
+    if (tileProvider != null) {
+      tileProvider.mTileProvider.setUrlCdnSuffix(urlCdnSuffix);
     }
     if (tileOverlay != null) {
       tileOverlay.clearTileCache();
@@ -219,7 +262,7 @@ public class AirMapUrlTile extends AirMapFeature {
     TileOverlayOptions options = new TileOverlayOptions();
     options.zIndex(zIndex);
     options.transparency(1-opacity);
-    this.tileProvider = new CanvasTileProvider(new AIRMapUrlTileProvider(256, 256, this.urlTemplate));
+    this.tileProvider = new CanvasTileProvider(new AIRMapUrlTileProvider(256, 256, this.urlTemplate, this.urlCdn, this.urlCdnSuffix));
     options.tileProvider(this.tileProvider);
     return options;
   }

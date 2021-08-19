@@ -40,6 +40,16 @@ public class AirMapUrlTileManager extends ViewGroupManager<AirMapUrlTile> {
     view.setUrlTemplate(urlTemplate);
   }
 
+  @ReactProp(name = "urlCdn")
+  public void setUrlCdn(AirMapUrlTile view, String urlCdn) {
+    view.setUrlCdn(urlCdn);
+  }
+
+  @ReactProp(name = "urlCdnSuffix")
+  public void setUrlCdnSuffix(AirMapUrlTile view, String urlCdnSuffix) {
+    view.setUrlCdnSuffix(urlCdnSuffix);
+  }
+
   @ReactProp(name = "zIndex", defaultFloat = -1.0f)
   public void setZIndex(AirMapUrlTile view, float zIndex) {
     view.setZIndex(zIndex);
