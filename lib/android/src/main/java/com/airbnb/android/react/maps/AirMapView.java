@@ -115,6 +115,7 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
   private FusedLocationSource fusedLocationSource;
 
   private ViewAttacherGroup attacherGroup;
+  private LatLng tapLocation;
 
   private static boolean contextHasBug(Context context) {
     return context == null ||
@@ -275,7 +276,7 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     map.setOnPolygonClickListener(new GoogleMap.OnPolygonClickListener() {
       @Override
       public void onPolygonClick(Polygon polygon) {
-        WritableMap event = makeClickEventData(polygon.getPoints().get(0));
+        WritableMap event = makeClickEventData(tapLocation);
         event.putString("action", "polygon-press");
         if(polygonMap.get(polygon) != null) {
             manager.pushEvent(context, polygonMap.get(polygon), "onPress", event);
@@ -1047,6 +1048,10 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
   @Override
   public boolean dispatchTouchEvent(MotionEvent ev) {
     gestureDetector.onTouchEvent(ev);
+
+    int X = (int)ev.getX();          
+    int Y = (int)ev.getY();
+    tapLocation = map.getProjection().fromScreenLocation(new Point(X,Y));
 
     int action = MotionEventCompat.getActionMasked(ev);
 

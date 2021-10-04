@@ -80,6 +80,7 @@ declare module "react-native-maps" {
     easing?: (value: number) => number;
     duration?: number;
     delay?: number;
+    useNativeDriver?: boolean;
   }
 
   interface AnimatedRegionSpringConfig
@@ -96,13 +97,14 @@ declare module "react-native-maps" {
     stiffness?: number;
     mass?: number;
     damping?: number;
+    useNativeDriver?: boolean;
   }
 
-  export class AnimatedRegion extends RNAnimated.AnimatedWithChildren {
-    latitude: RNAnimated.Value;
-    longitude: RNAnimated.Value;
-    latitudeDelta: RNAnimated.Value;
-    longitudeDelta: RNAnimated.Value;
+  export class AnimatedRegion extends Animated.AnimatedWithChildren {
+    latitude: Animated.Value;
+    longitude: Animated.Value;
+    latitudeDelta: Animated.Value;
+    longitudeDelta: Animated.Value;
 
     constructor(region?: Region);
 
@@ -505,10 +507,16 @@ declare module "react-native-maps" {
     urlTemplate: string;
     minimumZ?: number;
     maximumZ?: number;
+    maximumNativeZ?: number;
     zIndex?: number;
     tileSize?: number;
+    doubleTileSize?: boolean;
     shouldReplaceMapContent?: boolean;
     flipY?: boolean;
+    tileCachePath?: string;
+    tileCacheMaxAge?: number;
+    offlineMode?: boolean;
+    opacity?: number;
   }
 
   export class UrlTile extends React.Component<MapUrlTileProps, any> {}
@@ -528,12 +536,16 @@ declare module "react-native-maps" {
 
   export interface MapWMSTileProps extends ViewProperties {
     urlTemplate: string;
-    maximumZ?: number;
     minimumZ?: number;
-    tileSize: number;
-    opacity: number;
+    maximumZ?: number;
+    maximumNativeZ?: number;
     zIndex?: number;
+    tileSize?: number;
     shouldReplaceMapContent?: boolean;
+    tileCachePath?: string;
+    tileCacheMaxAge?: number;
+    offlineMode?: boolean;
+    opacity?: number;
   }
 
   export class WMSTile extends React.Component<MapWMSTileProps, any> {}
@@ -585,7 +597,7 @@ declare module "react-native-maps" {
   import GeoJSON from 'geojson';
 
   export interface GeojsonProps {
-    geojson: GeoJSON.GeoJSON;
+    geojson: GeoJSON.FeatureCollection;
     strokeColor?: string;
     fillColor?: string;
     strokeWidth?: number;
@@ -594,6 +606,11 @@ declare module "react-native-maps" {
     lineCap?: 'butt' | 'round' | 'square';
     lineJoin?: 'miter' | 'round' | 'bevel';
     miterLimit?: number;
+    zIndex?: number;
+    tappable?: boolean;
+    title?: string;
+    onPress?: (event: MapEvent) => void;
+    markerComponent?: React.ReactNode;
   }
 
   export class Geojson extends React.Component<GeojsonProps, any> {}
