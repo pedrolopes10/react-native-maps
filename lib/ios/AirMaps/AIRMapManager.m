@@ -600,9 +600,9 @@ RCT_EXPORT_METHOD(fitToElements:(nonnull NSNumber *)reactTag
 }
 
 RCT_EXPORT_METHOD(fitToElements:(nonnull NSNumber *)reactTag
+                  edgePadding:(NSDictionary *)edgePadding
                   animated:(BOOL)animated
-                  withDuration:(CGFloat)duration
-                  edgePadding:(NSDictionary *)edgePadding)
+                  withDuration:(CGFloat)duration)
 {
     [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
         id view = viewRegistry[reactTag];
