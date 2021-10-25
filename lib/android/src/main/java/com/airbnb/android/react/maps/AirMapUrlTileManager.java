@@ -55,11 +55,6 @@ public class AirMapUrlTileManager extends ViewGroupManager<AirMapUrlTile> {
     view.setZIndex(zIndex);
   }
 
-  @ReactProp(name = "opacity", defaultFloat = 1.0f)
-  public void setOpacity(AirMapUrlTile view, float opacity) {
-    view.setOpacity(opacity);
-  }
-
   @ReactProp(name = "minimumZ", defaultFloat = 0.0f)
   public void setMinimumZ(AirMapUrlTile view, float minimumZ) {
     view.setMinimumZ(minimumZ);

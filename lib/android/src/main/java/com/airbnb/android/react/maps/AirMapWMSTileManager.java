@@ -40,6 +40,16 @@ public class AirMapWMSTileManager extends ViewGroupManager<AirMapWMSTile> {
     view.setUrlTemplate(urlTemplate);
   }
 
+  @ReactProp(name = "urlCdn")
+  public void setUrlCdn(AirMapWMSTile view, String urlCdn) {
+    view.setUrlCdn(urlCdn);
+  }
+
+  @ReactProp(name = "urlCdnSuffix")
+  public void setUrlCdnSuffix(AirMapWMSTile view, String urlCdnSuffix) {
+    view.setUrlCdnSuffix(urlCdnSuffix);
+  }
+
   @ReactProp(name = "zIndex", defaultFloat = -1.0f)
   public void setZIndex(AirMapWMSTile view, float zIndex) {
     view.setZIndex(zIndex);

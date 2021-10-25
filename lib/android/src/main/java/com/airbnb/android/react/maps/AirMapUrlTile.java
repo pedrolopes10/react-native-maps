@@ -17,6 +17,8 @@ public class AirMapUrlTile extends AirMapFeature {
   protected AirMapTileProvider tileProvider;
 
   protected String urlTemplate;
+  protected String urlCdn;
+  protected String urlCdnSuffix;
   protected float zIndex;
   protected float maximumZ;
   protected float maximumNativeZ = 100;
@@ -40,6 +42,26 @@ public class AirMapUrlTile extends AirMapFeature {
     this.urlTemplate = urlTemplate;
     if (tileProvider != null) {
       tileProvider.setUrlTemplate(urlTemplate);
+    }
+    if (tileOverlay != null) {
+      tileOverlay.clearTileCache();
+    }
+  }
+
+  public void setUrlCdn(String urlCdn) {
+    this.urlCdn = urlCdn;
+    if (tileProvider != null) {
+      tileProvider.setUrlCdn(urlCdn);
+    }
+    if (tileOverlay != null) {
+      tileOverlay.clearTileCache();
+    }
+  }
+
+  public void setUrlCdnSuffix(String urlCdnSuffix) {
+    this.urlCdnSuffix = urlCdnSuffix;
+    if (tileProvider != null) {
+      tileProvider.setUrlCdnSuffix(urlCdnSuffix);
     }
     if (tileOverlay != null) {
       tileOverlay.clearTileCache();
@@ -117,7 +139,7 @@ public class AirMapUrlTile extends AirMapFeature {
 
   public void setTileCachePath(String tileCachePath) {
     if (tileCachePath == null || tileCachePath.isEmpty()) return;
-    
+
     try {
       URL url = new URL(tileCachePath);
       this.tileCachePath = url.getPath();
@@ -176,16 +198,16 @@ public class AirMapUrlTile extends AirMapFeature {
     if (tileProvider != null) {
       tileProvider.setCustomMode();
     }
-  } 
+  }
 
   protected TileOverlayOptions createTileOverlayOptions() {
     Log.d("urlTile ", "creating TileProvider");
     TileOverlayOptions options = new TileOverlayOptions();
     options.zIndex(zIndex);
     options.transparency(1 - this.opacity);
-    this.tileProvider = new AirMapTileProvider((int)this.tileSize, this.doubleTileSize, this.urlTemplate, 
-      (int)this.maximumZ, (int)this.maximumNativeZ, (int)this.minimumZ, this.flipY, this.tileCachePath, 
-      (int)this.tileCacheMaxAge, this.offlineMode, this.context, this.customTileProviderNeeded);
+    this.tileProvider = new AirMapTileProvider((int)this.tileSize, this.doubleTileSize, this.urlTemplate,
+      (int)this.maximumZ, (int)this.maximumNativeZ, (int)this.minimumZ, this.flipY, this.tileCachePath,
+      (int)this.tileCacheMaxAge, this.offlineMode, this.context, this.customTileProviderNeeded, this.urlCdn, this.urlCdnSuffix);
     options.tileProvider(this.tileProvider);
     return options;
   }
