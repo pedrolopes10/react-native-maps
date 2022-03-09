@@ -80,7 +80,7 @@ declare module "react-native-maps" {
     easing?: (value: number) => number;
     duration?: number;
     delay?: number;
-    useNativeDriver?: boolean;
+    useNativeDriver: boolean;
   }
 
   interface AnimatedRegionSpringConfig
@@ -97,14 +97,14 @@ declare module "react-native-maps" {
     stiffness?: number;
     mass?: number;
     damping?: number;
-    useNativeDriver?: boolean;
+    useNativeDriver: boolean;
   }
 
-  export class AnimatedRegion extends Animated.AnimatedWithChildren {
-    latitude: Animated.Value;
-    longitude: Animated.Value;
-    latitudeDelta: Animated.Value;
-    longitudeDelta: Animated.Value;
+  export class AnimatedRegion extends RNAnimated.AnimatedWithChildren {
+    latitude: RNAnimated.Value;
+    longitude: RNAnimated.Value;
+    latitudeDelta: RNAnimated.Value;
+    longitudeDelta: RNAnimated.Value;
 
     constructor(region?: Region);
 
@@ -302,6 +302,7 @@ declare module "react-native-maps" {
   }
 
   export default class MapView extends React.Component<MapViewProps, any> {
+    private __lastRegion?: Region;
     getCamera(): Promise<Camera>;
     setCamera(camera: Partial<Camera>, opts?: {edgePadding?: EdgePadding}): void;
     animateCamera(camera: Partial<Camera>, opts?: { duration?: number, edgePadding?: EdgePadding }): void;
@@ -359,6 +360,7 @@ declare module "react-native-maps" {
     calloutAnchor?: Point;
     flat?: boolean;
     draggable?: boolean;
+    tappable?: boolean;
     tracksViewChanges?: boolean;
     tracksInfoWindowChanges?: boolean;
     stopPropagation?: boolean;
