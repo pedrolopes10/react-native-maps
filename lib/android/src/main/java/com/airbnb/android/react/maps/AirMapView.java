@@ -72,8 +72,7 @@ import java.util.concurrent.ExecutionException;
 
 import static androidx.core.content.PermissionChecker.checkSelfPermission;
 
-public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
-    GoogleMap.OnMarkerDragListener, OnMapReadyCallback, GoogleMap.OnPoiClickListener, GoogleMap.OnIndoorStateChangeListener {
+public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter, OnMapReadyCallback {
   public GoogleMap map;
   private KmlLayer kmlLayer;
   private ProgressBar mapLoadingProgressBar;
@@ -215,9 +214,6 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     }
     this.map = map;
     this.map.setInfoWindowAdapter(this);
-    this.map.setOnMarkerDragListener(this);
-    this.map.setOnPoiClickListener(this);
-    this.map.setOnIndoorStateChangeListener(this);
     if(initialRegion != null) {
       setRegion(initialRegion);
       initialRegionSet = true;
@@ -1080,46 +1076,6 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     return true;
   }
 
-  @Override
-  public void onMarkerDragStart(Marker marker) {
-    WritableMap event = makeClickEventData(marker.getPosition());
-    manager.pushEvent(context, this, "onMarkerDragStart", event);
-
-    AirMapMarker markerView = getMarkerMap(marker);
-    event = makeClickEventData(marker.getPosition());
-    manager.pushEvent(context, markerView, "onDragStart", event);
-  }
-
-  @Override
-  public void onMarkerDrag(Marker marker) {
-    WritableMap event = makeClickEventData(marker.getPosition());
-    manager.pushEvent(context, this, "onMarkerDrag", event);
-
-    AirMapMarker markerView = getMarkerMap(marker);
-    event = makeClickEventData(marker.getPosition());
-    manager.pushEvent(context, markerView, "onDrag", event);
-  }
-
-  @Override
-  public void onMarkerDragEnd(Marker marker) {
-    WritableMap event = makeClickEventData(marker.getPosition());
-    manager.pushEvent(context, this, "onMarkerDragEnd", event);
-
-    AirMapMarker markerView = getMarkerMap(marker);
-    event = makeClickEventData(marker.getPosition());
-    manager.pushEvent(context, markerView, "onDragEnd", event);
-  }
-
-  @Override
-  public void onPoiClick(PointOfInterest poi) {
-    WritableMap event = makeClickEventData(poi.latLng);
-
-    event.putString("placeId", poi.placeId);
-    event.putString("name", poi.name);
-
-    manager.pushEvent(context, this, "onPoiClick", event);
-  }
-
   private ProgressBar getMapLoadingProgressBar() {
     if (this.mapLoadingProgressBar == null) {
       this.mapLoadingProgressBar = new ProgressBar(getContext());
@@ -1317,67 +1273,6 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     } catch (ExecutionException e) {
       e.printStackTrace();
     }
-  }
-
-  @Override
-  public void onIndoorBuildingFocused() {
-    IndoorBuilding building = this.map.getFocusedBuilding();
-    if (building != null) {
-      List<IndoorLevel> levels = building.getLevels();
-      int index = 0;
-      WritableArray levelsArray = Arguments.createArray();
-      for (IndoorLevel level : levels) {
-        WritableMap levelMap = Arguments.createMap();
-        levelMap.putInt("index", index);
-        levelMap.putString("name", level.getName());
-        levelMap.putString("shortName", level.getShortName());
-        levelsArray.pushMap(levelMap);
-        index++;
-      }
-      WritableMap event = Arguments.createMap();
-      WritableMap indoorBuilding = Arguments.createMap();
-      indoorBuilding.putArray("levels", levelsArray);
-      indoorBuilding.putInt("activeLevelIndex", building.getActiveLevelIndex());
-      indoorBuilding.putBoolean("underground", building.isUnderground());
-
-      event.putMap("IndoorBuilding", indoorBuilding);
-
-      manager.pushEvent(context, this, "onIndoorBuildingFocused", event);
-    } else {
-      WritableMap event = Arguments.createMap();
-      WritableArray levelsArray = Arguments.createArray();
-      WritableMap indoorBuilding = Arguments.createMap();
-      indoorBuilding.putArray("levels", levelsArray);
-      indoorBuilding.putInt("activeLevelIndex", 0);
-      indoorBuilding.putBoolean("underground", false);
-
-      event.putMap("IndoorBuilding", indoorBuilding);
-
-      manager.pushEvent(context, this, "onIndoorBuildingFocused", event);
-    }
-  }
-
-  @Override
-  public void onIndoorLevelActivated(IndoorBuilding building) {
-    if (building == null) {
-      return;
-    }
-    int activeLevelIndex = building.getActiveLevelIndex();
-    if (activeLevelIndex < 0 || activeLevelIndex >= building.getLevels().size()) {
-      return;
-    }
-    IndoorLevel level = building.getLevels().get(activeLevelIndex);
-
-    WritableMap event = Arguments.createMap();
-    WritableMap indoorlevel = Arguments.createMap();
-
-    indoorlevel.putInt("activeLevelIndex", activeLevelIndex);
-    indoorlevel.putString("name", level.getName());
-    indoorlevel.putString("shortName", level.getShortName());
-
-    event.putMap("IndoorLevel", indoorlevel);
-
-    manager.pushEvent(context, this, "onIndoorLevelActivated", event);
   }
 
   public void setIndoorActiveLevelIndex(int activeLevelIndex) {
