@@ -9,7 +9,12 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.PatternItem;
+import com.google.android.gms.maps.model.Gap;
+import com.google.android.gms.maps.model.Dash;
+import com.google.android.gms.maps.model.Dot;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +27,8 @@ public class AirMapPolyline extends AirMapFeature {
 
   private List<LatLng> coordinates;
   private List<String> strokeColors;
+  private Integer lineDashPatternDash;
+  private Integer lineDashPatternGap;
   private int color;
   private float width;
   private boolean geodesic;
@@ -60,33 +67,6 @@ public class AirMapPolyline extends AirMapFeature {
     }
   }
 
-  /*
-  public void setStrokeColors(ReadableArray strokeColors) {
-    if(strokeColors != null){
-        this.strokeColors = new ArrayList<>(strokeColors.size());
-        for (int i = 0; i < strokeColors.size(); i++) {
-          String strokeColor = strokeColors.getString(i);
-          this.strokeColors.add(i, strokeColor);
-        }
-    }
-  }
-
-  public void setCoordinates(ReadableArray coordinates) {
-    this.coordinates = new ArrayList<>(coordinates.size());
-    for (int i = 0; i < coordinates.size(); i++) {
-      ReadableMap coordinate = coordinates.getMap(i);
-      this.coordinates.add(i,
-          new LatLng(coordinate.getDouble("latitude"), coordinate.getDouble("longitude")));
-    }
-
-    if (polyline != null && (type.equals("fake") || type.equals("single"))) {
-        polyline.setPoints(this.coordinates);
-    } else if (polyline != null && type.equals("actual")){
-        removeFromMap(this.map);
-        createPolyline();
-    }
-  }*/
-
   public void setColor(int color) {
     this.color = color;
   }
@@ -101,6 +81,13 @@ public class AirMapPolyline extends AirMapFeature {
 
   public void setGeodesic(boolean geodesic) {
     this.geodesic = geodesic;
+  }
+
+  public void setLineDashPattern(ReadableArray lineDashPattern) {
+      if(lineDashPattern != null && lineDashPattern.size() > 0){
+          this.lineDashPatternDash = lineDashPattern.getInt(0);
+          this.lineDashPatternGap = lineDashPattern.getInt(1);
+      }
   }
 
   private void createPolyline() {
@@ -126,6 +113,11 @@ public class AirMapPolyline extends AirMapFeature {
         options.width(width);
         options.geodesic(geodesic);
         options.zIndex(zIndex);
+
+        if(lineDashPatternDash != null){
+            List<PatternItem> pattern = Arrays.<PatternItem>asList(new Dot(), new Gap(this.lineDashPatternGap), new Dash(this.lineDashPatternDash), new Gap(this.lineDashPatternGap));
+            options.pattern(pattern);
+        }
 
         polyline = this.map.addPolyline(options);
         polyline.setClickable(false);

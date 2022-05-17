@@ -52,17 +52,6 @@ public class AirMapPolylineManager extends ViewGroupManager<AirMapPolyline> {
     view.setSyncedCoordsColors(syncedCoordsColors);
   }
 
-  /*
-  @ReactProp(name = "coordinates")
-  public void setCoordinate(AirMapPolyline view, ReadableArray coordinates) {
-    view.setCoordinates(coordinates);
-  }
-
-  @ReactProp(name = "strokeColors")
-  public void setStrokeColors(AirMapPolyline view, ReadableArray strokeColors) {
-    view.setStrokeColors(strokeColors);
-  }*/
-
   @ReactProp(name = "strokeWidth", defaultFloat = 1f)
   public void setStrokeWidth(AirMapPolyline view, float widthInPoints) {
     float widthInScreenPx = metrics.density * widthInPoints; // done for parity with iOS
@@ -82,6 +71,11 @@ public class AirMapPolylineManager extends ViewGroupManager<AirMapPolyline> {
   @ReactProp(name = "zIndex", defaultFloat = 1.0f)
   public void setZIndex(AirMapPolyline view, float zIndex) {
     view.setZIndex(zIndex);
+  }
+
+  @ReactProp(name = "lineDashPattern")
+  public void setLineDashPattern(AirMapPolyline view, ReadableArray lineDashPattern) {
+    view.setLineDashPattern(lineDashPattern);
   }
 
   @Override
