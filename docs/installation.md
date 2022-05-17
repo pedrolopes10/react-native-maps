@@ -3,14 +3,10 @@
 Install the library from npm:
 
 ```sh
-npm install react-native-maps --save-exact
+$ npm install react-native-maps
+# --- or ---
+$ yarn add react-native-maps
 ```
-
-The library ships with platform native code that needs to be compiled together with React Native. This requires you to configure your build tools.
-
-**Since React Native 0.60 and higher**, [autolinking](https://github.com/react-native-community/cli/blob/master/docs/autolinking.md) makes the installation process simpler.
-
-**Using React Native 0.59 or lower?** Please refer to [the old installation guide](https://github.com/react-native-maps/react-native-maps/blob/5be836e1290457c4c7cefe83246ef532859c692d/docs/installation.md).
 
 The actual map implementation depends on the platform. On Android, one has to use [Google Maps](https://developers.google.com/maps/documentation/), which in turn requires you to obtain an [API key for the Android SDK](https://developers.google.com/maps/documentation/android-sdk/signup).
 
@@ -22,14 +18,14 @@ When using Google Maps on iOS, you need also to obtain an [API key for the iOS S
 
 ---
 
-## Build configuration on iOS
-
-### Using CocoaPods
+## iOS
 
 After installing the npm package, we need to install the pod.
 
 ```sh
-npx pod-install
+$ (cd ios && pod install)
+# --- or ---
+$ npx pod-install
 ```
 
 ### Set the usage description property
@@ -54,6 +50,14 @@ If you want to enable Google Maps on iOS, obtain the Google API key and edit you
 
 The `[GMSServices provideAPIKey]` should be the **first call** of the method.
 
+Google Maps SDK for iOS requires iOS 12, so make sure that your deployment target is >= 12.0 in your iOS project settings.
+
+Also make sure that your Podfile deployment target is set to >= 12.0 at the top of your Podfile, eg:
+
+```ruby
+platform :ios, '12.0'
+```
+
 Add the following to your Podfile above the `use_native_modules!` function and run `pod install` in the ios folder:
 
 ```ruby
@@ -66,69 +70,9 @@ That's it, you made it! 👍
 
 ---
 
-## Build configuration on Android
+## Android
 
-Ensure your build files match the following requirements:
-
-1. **Configure Google Play Services**
-
-**If you've defined _[project-wide properties](https://developer.android.com/studio/build/gradle-tips.html)_ (_recommended_) in your root `build.gradle`, this library will detect the presence of the following properties:**
-
-```groovy
-buildscript {...}
-allprojects {...}
-
-/**
- + Project-wide Gradle configuration properties
- */
-ext {
-    compileSdkVersion   = xxx
-    targetSdkVersion    = xxx
-    buildToolsVersion   = "xxx"
-    minSdkVersion       = xxx
-    supportLibVersion   = "xxx"
-    playServicesVersion = "17.0.0" // or find latest version
-    androidMapsUtilsVersion = "xxx"
-}
-```
-
-or do
-
-```groovy
-buildscript {
-    ext {
-        buildToolsVersion = "xxx"
-        minSdkVersion = xxx
-        compileSdkVersion = xxx
-        targetSdkVersion = xxx
-        supportLibVersion = "xxx"
-        playServicesVersion = "17.0.0" // or find latest version
-        androidMapsUtilsVersion = "xxx"
-    }
-}
-...
-```
-
-You can find the latest `playServicesVersion` by checking [https://developers.google.com/android/guides/releases](https://developers.google.com/android/guides/releases) and searching for `gms:play-services-maps:`
-
-You can find the latest `androidMapsUtilsVersion` by checking [https://mvnrepository.com/artifact/com.google.maps.android/android-maps-utils](https://mvnrepository.com/artifact/com.google.maps.android/android-maps-utils)
-
-**If you do _not_ have _project-wide properties_ defined and have a different play-services version than the one included in this library, use the following instead (switch 17.0.0 and/or 17.2.1 for the desired versions):**
-
-```groovy
-...
-dependencies {
-   ...
-   implementation(project(':react-native-maps')){
-       exclude group: 'com.google.android.gms', module: 'play-services-base'
-       exclude group: 'com.google.android.gms', module: 'play-services-maps'
-   }
-   implementation 'com.google.android.gms:play-services-base:17.2.1'
-   implementation 'com.google.android.gms:play-services-maps:17.0.0'
-}
-```
-
-2. **Specify your Google Maps API key:**
+### Specify your Google Maps API key
 
 Add your API key to your manifest file (`android/app/src/main/AndroidManifest.xml`):
 
@@ -138,25 +82,17 @@ Add your API key to your manifest file (`android/app/src/main/AndroidManifest.xm
    <meta-data
      android:name="com.google.android.geo.API_KEY"
      android:value="Your Google maps API Key Here"/>
-
-   <!-- You will also only need to add this uses-library tag -->
-   <uses-library android:name="org.apache.http.legacy" android:required="false"/>
 </application>
 ```
 
-> Note: As shown above, `com.google.android.geo.API_KEY` is the
-> recommended metadata name for the API key. A key with this name can be
-> used to authenticate to multiple Google Maps-based APIs on the Android
-> platform, including the Google Maps Android API. For backwards
-> compatibility, the API also supports the name
-> `com.google.android.maps.v2.API_KEY`. This legacy name allows
-> authentication to the Android Maps API v2 only. An application can
-> specify only one of the API key metadata names. If both are specified,
-> the API throws an exception.
+### Upgrading to >= v0.31.0
 
-Source: https://developers.google.com/maps/documentation/android-api/signup
+The installation documentation previously specified adding `supportLibVersion`, `playServicesVersion` and `androidMapsUtilsVersion` to `build.gradle`.
 
-3. **Ensure that you have Google Play Services installed:**
+None of these keys are required anymore and can be removed, if not used by other modules in your project.
+> **ATTENTION**: If you leave `playServicesVersion` in `build.gradle`, the version must be at least `18.0.0`
+
+### Ensure that you have Google Play Services installed
 
 - For the Genymotion emulator, you can follow [these instructions](https://www.genymotion.com/help/desktop/faq/#google-play-services).
 - For a physical device you need to search on Google for 'Google Play
@@ -164,7 +100,23 @@ Source: https://developers.google.com/maps/documentation/android-api/signup
   from there you will see a button to update it (do not search within the
   Play Store).
 
-That's it, you made it! :+1:
+### Using the new Google Maps Renderer
+
+A new renderer for Google Maps on Android will become the default through a progressive rollout starting in June 2022 at the earliest. (Read more about it [here](https://developers.google.com/maps/documentation/android-sdk/renderer))
+
+react-native-maps added support for the new renderer in v0.31.0.
+
+To opt in to the new renderer add the following code in your entry file (e.g. App.js):
+
+```javascript
+import { enableLatestRenderer } from 'react-native-maps';
+
+enableLatestRenderer();
+```
+
+`enableLatestRenderer` returns a promise (on android) specifying the map renderer being used, either `'LATEST' | 'LEGACY'`. It can be called at any point to get the renderer being used, but it won't change after the first map has been rendered.
+
+Make sure to test your app thoroughly after enabling the new renderer, as it seems to cause some behavioural changes, e.g. [this](https://github.com/react-native-maps/react-native-maps/pull/4055#issuecomment-1063358886).
 
 ## Using the new Google Maps Renderer
 
@@ -297,22 +249,6 @@ In particular, the following packages have to be installed:
 - Android 6.0 (API 23) / Google APIs Intel x86 Atom System Image Rev. 19
 - Android SDK Build-tools 23.0.3
 
-### No native module found exception on Android
-
-Be sure to have `new MapsPackage()` in your `MainApplication.java` :
-
-```java
-import com.airbnb.android.react.maps.MapsPackage;
-...
-    @Override
-    protected List<ReactPackage> getPackages() {
-        return Arrays.<ReactPackage>asList(
-                new MainReactPackage(),
-                new MapsPackage()
-        );
-    }
-```
-
 ### Android emulator issues
 
 - When starting Android emulator, make sure you have enabled `Wipe user data`.
@@ -324,7 +260,7 @@ import com.airbnb.android.react.maps.MapsPackage;
 
 ### Google Play Services conflicting issues with other modules
 
-In case you have multiple modules using Google Play Services such as `react-native-onesignal`, Make sure to exclude all the Google Play Services dependencies from the modules and import all the Google Play Services dependencies for all the modules in the project-wide `build.gradle` file like the following example:
+In case you have multiple modules using the same Google Play Services dependencies (such as `react-native-onesignal`), you can exclude the conflicting dependencies from the modules and import the Google Play Services dependencies in the project-wide `build.gradle` file like the following example:
 
 ```groovy
   implementation(project(':react-native-onesignal')){
@@ -334,28 +270,17 @@ In case you have multiple modules using Google Play Services such as `react-nati
   implementation(project(':react-native-maps')){
       exclude group: 'com.google.android.gms'
   }
-  implementation 'com.google.android.gms:play-services-base:12.0.1'
-  implementation 'com.google.android.gms:play-services-basement:12.0.1'
-  implementation 'com.google.android.gms:play-services-location:12.0.1'
-  implementation 'com.google.android.gms:play-services-tasks:12.0.1'
-  implementation 'com.google.android.gms:play-services-maps:12.0.1'
+  implementation 'com.google.android.gms:play-services-base:18.0.1'
+  implementation 'com.google.android.gms:play-services-location:19.0.1'
+  implementation 'com.google.android.gms:play-services-maps:18.0.2'
 ```
+
+A list of the current dependencies can be found [here](https://developers.google.com/android/guides/setup#list-dependencies).
+
+> **ATTENTION**: `react-native-maps` requires `play-services-maps >= 18.0.0`
 
 ### Trouble with Google Play services
 
 - Make sure that your emulator has Google Play (Go to Android studio -> Virtual Devices -> Check that you have icon in "Play Store" column)
 - Click to bottom dots icon in the emulator
 - Go to Google Play Tab and click Update
-
-### Android build error: "Program type already present"
-
-If you **don't** use project-wide properties as per instructions above (not making changes to global android/build.gradle) and encounter at build time "Program type already present" error - add those lines to your android/app/build.gradle in the dependencies section:
-
-```groovy
-    dependencies {
-    ...
-    implementation "com.android.support:appcompat-v7:${rootProject.ext.supportLibVersion}"
-    implementation "com.android.support:design:${rootProject.ext.supportLibVersion}"
-    implementation "com.android.support:support-v4:${rootProject.ext.supportLibVersion}"
-    }
-```
