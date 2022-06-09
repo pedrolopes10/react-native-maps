@@ -115,7 +115,7 @@ public class AirMapPolyline extends AirMapFeature {
         options.zIndex(zIndex);
 
         if(lineDashPatternDash != null){
-            List<PatternItem> pattern = Arrays.<PatternItem>asList(new Dot(), new Gap(this.lineDashPatternGap), new Dash(this.lineDashPatternDash), new Gap(this.lineDashPatternGap));
+            List<PatternItem> pattern = Arrays.<PatternItem>asList(new Dash(this.lineDashPatternDash), new Gap(this.lineDashPatternGap));
             options.pattern(pattern);
         }
 
