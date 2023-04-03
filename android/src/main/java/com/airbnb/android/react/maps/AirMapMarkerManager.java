@@ -163,6 +163,12 @@ public class AirMapMarkerManager extends ViewGroupManager<AirMapMarker> {
   public AirMapMarker createViewInstance(ThemedReactContext context) {
     return new AirMapMarker(context, this);
   }
+  
+  @Override
+  public void onDropViewInstance(AirMapMarker view) {
+    super.onDropViewInstance(view);
+    view = null;
+  }
 
   @ReactProp(name = "coordinate")
   public void setCoordinate(AirMapMarker view, ReadableMap map) {
@@ -286,6 +292,7 @@ public class AirMapMarkerManager extends ViewGroupManager<AirMapMarker> {
   public void removeViewAt(AirMapMarker parent, int index) {
     super.removeViewAt(parent, index);
     parent.update(true);
+    parent = null;
   }
 
   @Override
