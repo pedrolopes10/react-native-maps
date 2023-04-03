@@ -416,6 +416,12 @@ public class AirMapMarker extends AirMapFeature {
     }
     update(true);
   }
+  
+  @Override
+  public void removeView(View child) {
+    super.removeView(child);
+    detachViewFromParent(child);
+  }
 
   @Override
   public void requestLayout() {
@@ -448,6 +454,11 @@ public class AirMapMarker extends AirMapFeature {
     if (marker == null) {
       return;
     }
+    
+    if(AirMapMarker.this.markerManager != null && AirMapMarker.this.imageUri != null){
+        AirMapMarker.this.markerManager.getSharedIcon(AirMapMarker.this.imageUri).removeMarker(AirMapMarker.this);
+    }
+    
     marker.remove();
     marker = null;
     updateTracksViewChanges();
