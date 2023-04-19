@@ -80,7 +80,8 @@ export default decorateMapComponent(MapOverlay, {
   providers: {
     google: {
       ios: SUPPORTED,
-      android: USES_DEFAULT_IMPLEMENTATION,
+      // android: USES_DEFAULT_IMPLEMENTATION,
+      android: SUPPORTED,
     },
   },
 });

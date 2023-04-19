@@ -162,6 +162,9 @@ export default decorateMapComponent(MapPolyline, {
   providers: {
     google: {
       ios: SUPPORTED,
+      android: SUPPORTED,
+    },
+    osmdroid: {
       android: USES_DEFAULT_IMPLEMENTATION,
     },
   },

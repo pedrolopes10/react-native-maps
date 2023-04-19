@@ -1,5 +1,7 @@
 package com.airbnb.android.react.maps;
 
+import android.view.View;
+
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Point;
@@ -39,6 +41,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+
+import com.airbnb.android.react.maps.osmdroid.OsmMapView;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.api.IGeoPoint;
 
 @ReactModule(name = AirMapModule.NAME)
 public class AirMapModule extends ReactContextBaseJavaModule {
@@ -247,28 +253,42 @@ public class AirMapModule extends ReactContextBaseJavaModule {
     final ReactApplicationContext context = getReactApplicationContext();
     final double density = (double) context.getResources().getDisplayMetrics().density;
 
-    final LatLng coord = new LatLng(
-            coordinate.hasKey("latitude") ? coordinate.getDouble("latitude") : 0.0,
-            coordinate.hasKey("longitude") ? coordinate.getDouble("longitude") : 0.0
-    );
-
     UIManagerModule uiManager = context.getNativeModule(UIManagerModule.class);
     uiManager.addUIBlock(new UIBlock()
     {
       @Override
       public void execute(NativeViewHierarchyManager nvhm)
       {
-        AirMapView view = (AirMapView) nvhm.resolveView(tag);
-        if (view == null) {
-          promise.reject("AirMapView not found");
-          return;
+        View rawView = nvhm.resolveView(tag);
+        String viewType = String.valueOf(rawView.getClass());
+        Point pt = null;
+        if (!viewType.contains("OsmMapView")) {
+          final LatLng coord = new LatLng(
+                    coordinate.hasKey("latitude") ? coordinate.getDouble("latitude") : 0.0,
+                    coordinate.hasKey("longitude") ? coordinate.getDouble("longitude") : 0.0
+            );
+          AirMapView view = (AirMapView) nvhm.resolveView(tag);
+          if (view == null) {
+            promise.reject("AirMapView not found");
+            return;
+          }
+          if (view.map == null) {
+            promise.reject("AirMapView.map is not valid");
+            return;
+          }
+          pt = view.map.getProjection().toScreenLocation(coord);
+        } else {
+          final IGeoPoint osmCoord = new GeoPoint(
+                    coordinate.hasKey("latitude") ? coordinate.getDouble("latitude") : 0.0,
+                    coordinate.hasKey("longitude") ? coordinate.getDouble("longitude") : 0.0
+            );
+          OsmMapView view = (OsmMapView) nvhm.resolveView(tag);
+          if (view == null) {
+            promise.reject("OsmMapView not found");
+            return;
+          }
+          pt = view.getProjection().toPixels(osmCoord, null);
         }
-        if (view.map == null) {
-          promise.reject("AirMapView.map is not valid");
-          return;
-        }
-
-        Point pt = view.map.getProjection().toScreenLocation(coord);
 
         WritableMap ptJson = new WritableNativeMap();
         ptJson.putDouble("x", (double)pt.x / density);

@@ -46,7 +46,10 @@ export default decorateMapComponent(MapLocalTile, {
   providers: {
     google: {
       ios: SUPPORTED,
-      android: USES_DEFAULT_IMPLEMENTATION,
+      android: SUPPORTED,
+    },
+    osmdroid: {
+      android: USES_DEFAULT_IMPLEMENTATION
     },
   },
 });

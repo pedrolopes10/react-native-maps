@@ -45,6 +45,9 @@ export default decorateMapComponent(MapCallout, {
   providers: {
     google: {
       ios: SUPPORTED,
+      android: SUPPORTED,
+    },
+    osmdroid: {
       android: USES_DEFAULT_IMPLEMENTATION,
     },
   },

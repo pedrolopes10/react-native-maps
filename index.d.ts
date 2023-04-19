@@ -221,7 +221,7 @@ declare module "react-native-maps" {
     | 'mutedStandard';
 
   export interface MapViewProps extends ViewProperties {
-    provider?: 'google' | null;
+    provider?: "google" | "osmdroid" | null;
     customMapStyle?: MapStyleElement[];
     customMapStyleString?: string;
     userLocationPriority?: 'balanced' | 'high' | 'low' | 'passive';
@@ -635,4 +635,5 @@ declare module "react-native-maps" {
 
   export const PROVIDER_DEFAULT: null;
   export const PROVIDER_GOOGLE: 'google';
+  export const PROVIDER_OSMDROID: "osmdroid";
 }

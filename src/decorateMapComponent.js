@@ -1,18 +1,14 @@
 import PropTypes from 'prop-types';
 import { requireNativeComponent, NativeModules, Platform } from 'react-native';
-import { PROVIDER_DEFAULT, PROVIDER_GOOGLE } from './ProviderConstants';
+import { PROVIDER_DEFAULT, PROVIDER_GOOGLE, PROVIDER_OSMDROID } from './ProviderConstants';
 
 export const SUPPORTED = 'SUPPORTED';
 export const USES_DEFAULT_IMPLEMENTATION = 'USES_DEFAULT_IMPLEMENTATION';
 export const NOT_SUPPORTED = 'NOT_SUPPORTED';
 
 export function getAirMapName(provider) {
-  if (Platform.OS === 'android') {
-    return 'AIRMap';
-  }
-  if (provider === PROVIDER_GOOGLE) {
-    return 'AIRGoogleMap';
-  }
+  if (provider === PROVIDER_GOOGLE) return Platform.OS === 'ios' ? 'AIRGoogleMap' : 'AIRMap';
+  if (Platform.OS === 'android') return 'OsmMap';
   return 'AIRMap';
 }
 
@@ -41,6 +37,10 @@ function getViewManagerConfig(viewManagerName) {
 
 export const googleMapIsInstalled = !!getViewManagerConfig(
   getAirMapName(PROVIDER_GOOGLE)
+);
+
+export const osmdroidIsInstalled = !!getViewManagerConfig(
+  getAirMapName(PROVIDER_OSMDROID)
 );
 
 export default function decorateMapComponent(
@@ -73,10 +73,8 @@ export default function decorateMapComponent(
         `react-native-maps: ${componentName} is not supported on ${Platform.OS}`
       );
     } else if (platformSupport === SUPPORTED) {
-      if (
-        provider !== PROVIDER_GOOGLE ||
-        (Platform.OS === 'ios' && googleMapIsInstalled)
-      ) {
+      // if (provider !== PROVIDER_GOOGLE || (Platform.OS === 'ios' && googleMapIsInstalled)) {
+      if (googleMapIsInstalled) {
         components[provider] = requireNativeComponent(componentName, Component);
       }
     } else {

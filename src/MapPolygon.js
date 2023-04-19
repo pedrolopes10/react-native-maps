@@ -196,6 +196,9 @@ export default decorateMapComponent(MapPolygon, {
   providers: {
     google: {
       ios: SUPPORTED,
+      android: SUPPORTED,
+    },
+    osmdroid: {
       android: USES_DEFAULT_IMPLEMENTATION,
     },
   },
