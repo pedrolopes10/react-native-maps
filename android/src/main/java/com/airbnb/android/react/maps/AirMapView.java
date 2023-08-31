@@ -252,6 +252,10 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter, 
         WritableMap event;
         AirMapMarker airMapMarker = getMarkerMap(marker);
 
+        if(airMapMarker == null){
+            return false;
+        }
+
         event = makeClickEventData(marker.getPosition());
         event.putString("action", "marker-press");
         event.putString("id", airMapMarker.getIdentifier());
