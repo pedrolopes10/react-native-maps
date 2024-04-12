@@ -34,6 +34,16 @@ public class MapUrlTileManager extends ViewGroupManager<MapUrlTile> {
     view.setUrlTemplate(urlTemplate);
   }
 
+  @ReactProp(name = "urlCdn")
+  public void setUrlCdn(MapUrlTile view, String urlCdn) {
+    view.setUrlCdn(urlCdn);
+  }
+
+  @ReactProp(name = "urlCdnSuffix")
+  public void setUrlCdnSuffix(MapUrlTile view, String urlCdnSuffix) {
+    view.setUrlCdnSuffix(urlCdnSuffix);
+  }
+
   @ReactProp(name = "zIndex", defaultFloat = -1.0f)
   public void setZIndex(MapUrlTile view, float zIndex) {
     view.setZIndex(zIndex);

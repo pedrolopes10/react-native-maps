@@ -338,6 +338,7 @@ public class MapManager extends ViewGroupManager<MapView> {
         double latDelta;
         ReadableMap region;
         ReadableMap camera;
+        ReadableMap edgePadding;
 
         switch (commandId) {
             case "setCamera":
@@ -345,7 +346,8 @@ public class MapManager extends ViewGroupManager<MapView> {
                     break;
                 }
                 camera = args.getMap(0);
-                view.animateToCamera(camera, 0);
+                edgePadding = args.getMap(1);
+                view.animateToCamera(camera, 0, edgePadding);
                 break;
 
             case "animateCamera":
@@ -354,7 +356,8 @@ public class MapManager extends ViewGroupManager<MapView> {
                 }
                 camera = args.getMap(0);
                 duration = args.getInt(1);
-                view.animateToCamera(camera, duration);
+                edgePadding = args.getMap(2);
+                view.animateToCamera(camera, duration, edgePadding);
                 break;
 
             case "animateToRegion":
@@ -371,14 +374,14 @@ public class MapManager extends ViewGroupManager<MapView> {
                         new LatLng(lat - latDelta / 2, lng - lngDelta / 2), // southwest
                         new LatLng(lat + latDelta / 2, lng + lngDelta / 2)  // northeast
                 );
-                view.animateToRegion(bounds, duration);
+                view.animateToRegion(bounds, duration, args.getMap(2));
                 break;
 
             case "fitToElements":
                 if (args == null) {
                     break;
                 }
-                view.fitToElements(args.getMap(0), args.getBoolean(1));
+                view.fitToElements(args.getMap(0), args.getBoolean(1), args.getInt(2));
                 break;
 
             case "fitToSuppliedMarkers":

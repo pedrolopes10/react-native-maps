@@ -47,7 +47,7 @@ const NSInteger AIRMapMaxZoomLevel = 20;
 @implementation AIRMap
 {
     UIView *_legalLabel;
-    BOOL _initialRegionSet;
+        BOOL _initialRegionSet;
     BOOL _initialCameraSet;
 
     // Array to manually track RN subviews
@@ -86,7 +86,7 @@ const NSInteger AIRMapMaxZoomLevel = 20;
         self.minZoomLevel = 0;
         self.maxZoomLevel = AIRMapMaxZoomLevel;
         self.compassOffset = CGPointMake(0, 0);
-        self.legacyZoomConstraintsEnabled = YES;
+self.legacyZoomConstraintsEnabled = YES;
     }
     return self;
 }
@@ -256,39 +256,8 @@ const NSInteger AIRMapMaxZoomLevel = 20;
 // See this for some discussion of why we need to override this: https://github.com/nfarina/calloutview/pull/9
 - (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
 
-    CGPoint touchPoint = [self.calloutView convertPoint:point fromView:self];
-    UIView *touchedView = [self.calloutView hitTest:touchPoint withEvent:event];
-    
-    if (touchedView) {
-        UIWindow* win = [[[UIApplication sharedApplication] windows] firstObject];
-        AIRMapCalloutSubview* calloutSubview = nil;
-        AIRMapCallout* callout = nil;
-        AIRMapMarker* marker = nil;
-        
-        UIView* tmp = touchedView;
-        while (tmp && tmp != win && tmp != self.calloutView) {
-            if ([tmp respondsToSelector:@selector(onPress)]) {
-                calloutSubview = (AIRMapCalloutSubview*) tmp;
-            }
-            if ([tmp isKindOfClass:[AIRMapCallout class]]) {
-                callout = (AIRMapCallout*) tmp;
-                break;
-            }
-            tmp = tmp.superview;
-        }
-        
-        if (callout) {
-            marker = [self markerForCallout:callout];
-            if (marker) {
-                CGPoint touchPointReal = [marker.calloutView convertPoint:point fromView:self];
-                if (![callout isPointInside:touchPointReal]) {
-                    return [super hitTest:point withEvent:event];
-                }
-            }
-        }
-        
-        return calloutSubview ? calloutSubview : touchedView;
-    }
+    UIView *calloutMaybe = [self.calloutView hitTest:[self.calloutView convertPoint:point fromView:self] withEvent:event];
+    if (calloutMaybe) return calloutMaybe;
 
     return [super hitTest:point withEvent:event];
 }
@@ -325,7 +294,7 @@ const NSInteger AIRMapMaxZoomLevel = 20;
 - (NSArray *)getMapBoundaries
 {
     MKMapRect mapRect = self.visibleMapRect;
-    
+
     CLLocationCoordinate2D northEast = MKCoordinateForMapPoint(MKMapPointMake(MKMapRectGetMaxX(mapRect), mapRect.origin.y));
     CLLocationCoordinate2D southWest = MKCoordinateForMapPoint(MKMapPointMake(mapRect.origin.x, MKMapRectGetMaxY(mapRect)));
 
@@ -344,7 +313,7 @@ const NSInteger AIRMapMaxZoomLevel = 20;
 - (void)setShowsUserLocation:(BOOL)showsUserLocation
 {
     if (self.showsUserLocation != showsUserLocation) {
-        super.showsUserLocation = showsUserLocation;
+                super.showsUserLocation = showsUserLocation;
     }
 }
 

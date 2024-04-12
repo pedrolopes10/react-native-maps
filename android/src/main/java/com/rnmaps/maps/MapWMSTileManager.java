@@ -14,10 +14,10 @@ public class MapWMSTileManager extends ViewGroupManager<MapWMSTile> {
   public MapWMSTileManager(ReactApplicationContext reactContext) {
     super();
     DisplayMetrics metrics = new DisplayMetrics();
-    ((WindowManager) reactContext.getSystemService(Context.WINDOW_SERVICE))
-        .getDefaultDisplay()
-        .getRealMetrics(metrics);
-  }
+      ((WindowManager) reactContext.getSystemService(Context.WINDOW_SERVICE))
+          .getDefaultDisplay()
+          .getRealMetrics(metrics);
+      }
 
   @Override
   public String getName() {
@@ -32,6 +32,16 @@ public class MapWMSTileManager extends ViewGroupManager<MapWMSTile> {
   @ReactProp(name = "urlTemplate")
   public void setUrlTemplate(MapWMSTile view, String urlTemplate) {
     view.setUrlTemplate(urlTemplate);
+  }
+
+  @ReactProp(name = "urlCdn")
+  public void setUrlCdn(MapWMSTile view, String urlCdn) {
+    view.setUrlCdn(urlCdn);
+  }
+
+  @ReactProp(name = "urlCdnSuffix")
+  public void setUrlCdnSuffix(MapWMSTile view, String urlCdnSuffix) {
+    view.setUrlCdnSuffix(urlCdnSuffix);
   }
 
   @ReactProp(name = "zIndex", defaultFloat = -1.0f)

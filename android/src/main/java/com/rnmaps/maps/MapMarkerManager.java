@@ -160,6 +160,12 @@ public class MapMarkerManager extends ViewGroupManager<MapMarker> {
     return new MapMarker(context, this);
   }
 
+  @Override
+  public void onDropViewInstance(MapMarker view) {
+    super.onDropViewInstance(view);
+    view = null;
+  }
+
   @ReactProp(name = "coordinate")
   public void setCoordinate(MapMarker view, ReadableMap map) {
     view.setCoordinate(map);
@@ -282,6 +288,7 @@ public class MapMarkerManager extends ViewGroupManager<MapMarker> {
   public void removeViewAt(MapMarker parent, int index) {
     super.removeViewAt(parent, index);
     parent.update(true);
+    parent = null;
   }
 
   @Override

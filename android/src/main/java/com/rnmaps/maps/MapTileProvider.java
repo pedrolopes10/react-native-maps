@@ -41,83 +41,101 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
+import java.util.Random;
+
 public class MapTileProvider implements TileProvider {
 
 	class AIRMapUrlTileProvider extends UrlTileProvider {
-    private String urlTemplate;
+    		private String urlTemplate;
+		protected String urlCdn;
+		protected String urlCdnSuffix;
 
-    public AIRMapUrlTileProvider(int width, int height, String urlTemplate) {
-      super(width, height);
-      this.urlTemplate = urlTemplate;
-    }
+		public AIRMapUrlTileProvider(int width, int height, String urlTemplate, String urlCdn, String urlCdnSuffix) {
+			super(width, height);
+			this.urlTemplate = urlTemplate;
+			this.urlCdn = urlCdn;
+			this.urlCdnSuffix = urlCdnSuffix;
+		}
 
-    @Override
-    public URL getTileUrl(int x, int y, int zoom) {
+		@Override
+		public URL getTileUrl(int x, int y, int zoom) {
 
-      if (MapTileProvider.this.flipY) {
-        y = (1 << zoom) - y - 1;
-      }
+			if (MapTileProvider.this.flipY == true) {
+				y = (1 << zoom) - y - 1;
+			}
 
-      String s = this.urlTemplate
-          .replace("{x}", Integer.toString(x))
-          .replace("{y}", Integer.toString(y))
-          .replace("{z}", Integer.toString(zoom));
-      URL url;
+			String s = this.urlTemplate
+					.replace("{x}", Integer.toString(x))
+					.replace("{y}", Integer.toString(y))
+					.replace("{z}", Integer.toString(zoom));
+			URL url = null;
 
-      if(MapTileProvider.this.maximumZ > 0 && zoom > MapTileProvider.this.maximumZ) {
-        return null;
-      }
+			if(this.urlCdn != null && this.urlCdnSuffix != null){
+				String[] cdn = this.urlCdn.split(",");
+				String[] cdnSuffix = this.urlCdnSuffix.split(",");
+				int rnd = new Random().nextInt(cdnSuffix.length);
+				String cdnString = cdn[1].replace("{cdn}", cdnSuffix[rnd]);
+				s = s.replace(cdn[0], cdnString);
+			}
 
-      if(MapTileProvider.this.minimumZ > 0 && zoom < MapTileProvider.this.minimumZ) {
-        return null;
-      }
+			if(MapTileProvider.this.maximumZ > 0 && zoom > MapTileProvider.this.maximumZ) {
+				return url;
+			}
 
-      try {
-        url = new URL(s);
-      } catch (MalformedURLException e) {
-        throw new AssertionError(e);
-      }
-      return url;
-    }
+			if(MapTileProvider.this.minimumZ > 0 && zoom < MapTileProvider.this.minimumZ) {
+				return url;
+			}
 
-    public void setUrlTemplate(String urlTemplate) {
-      this.urlTemplate = urlTemplate;
-    }
+			try {
+				url = new URL(s);
+			} catch (MalformedURLException e) {
+				throw new AssertionError(e);
+			}
+			return url;
+		}
+
+		public void setUrlTemplate(String urlTemplate) {
+			this.urlTemplate = urlTemplate;
+		}
   }
 
 	protected static final int BUFFER_SIZE = 16 * 1024;
 	protected static final int TARGET_TILE_SIZE = 512;
 	protected UrlTileProvider tileProvider;
 	protected String urlTemplate;
+	protected String urlCdn;
+	protected String urlCdnSuffix;
 	protected int tileSize;
-  protected boolean doubleTileSize;
+	protected boolean doubleTileSize;
 	protected int maximumZ;
-  protected int maximumNativeZ;
-  protected int minimumZ;
-  protected boolean flipY;
+	protected int maximumNativeZ;
+	protected int minimumZ;
+	protected boolean flipY;
 	protected String tileCachePath;
 	protected int tileCacheMaxAge;
-  protected boolean offlineMode;
+	protected boolean offlineMode;
 	protected Context context;
 	protected boolean customMode;
 
 	public MapTileProvider(int tileSizet, boolean doubleTileSize, String urlTemplate,
-                           int maximumZ, int maximumNativeZ, int minimumZ, boolean flipY, String tileCachePath,
-                           int tileCacheMaxAge, boolean offlineMode, Context context, boolean customMode) {
-		this.tileProvider = new AIRMapUrlTileProvider(tileSizet, tileSizet, urlTemplate);
+							  int maximumZ, int maximumNativeZ, int minimumZ, boolean flipY, String tileCachePath,
+							  int tileCacheMaxAge, boolean offlineMode, Context context, boolean customMode, String urlCdn, String urlCdnSuffix) {
+		this.tileProvider = new AIRMapUrlTileProvider(tileSizet, tileSizet, urlTemplate, urlCdn, urlCdnSuffix);
 
 		this.tileSize = tileSizet;
-    this.doubleTileSize = doubleTileSize;
+		this.doubleTileSize = doubleTileSize;
 		this.urlTemplate = urlTemplate;
 		this.maximumZ = maximumZ;
-    this.maximumNativeZ = maximumNativeZ;
+		this.maximumNativeZ = maximumNativeZ;
 		this.minimumZ = minimumZ;
 		this.flipY = flipY;
 		this.tileCachePath = tileCachePath;
 		this.tileCacheMaxAge = tileCacheMaxAge;
-    this.offlineMode = offlineMode;
+		this.offlineMode = offlineMode;
 		this.context = context;
 		this.customMode = customMode;
+		this.urlCdn = urlCdn;
+		this.urlCdnSuffix = urlCdnSuffix;
 	}
 
 	@Override
@@ -126,32 +144,32 @@ public class MapTileProvider implements TileProvider {
 
 		byte[] image = null;
 		int maximumZ = this.maximumZ > 0 ? this.maximumZ : Integer.MAX_VALUE;
-		
-		if (this.tileSize == 256 && this.doubleTileSize && zoom + 1 <= this.maximumNativeZ && zoom + 1 <= maximumZ) {
-      Log.d("urlTile", "pullTilesFromHigherZoom");
-			image = pullTilesFromHigherZoom(x, y, zoom);      
-		} 
 
-    if (zoom > this.maximumNativeZ) {
-      Log.d("urlTile", "scaleLowerZoomTile");
+		if (this.tileSize == 256 && this.doubleTileSize && zoom + 1 <= this.maximumNativeZ && zoom + 1 <= maximumZ) {
+			Log.d("urlTile", "pullTilesFromHigherZoom");
+			image = pullTilesFromHigherZoom(x, y, zoom);
+		}
+
+		if (zoom > this.maximumNativeZ) {
+			Log.d("urlTile", "scaleLowerZoomTile");
 			image = scaleLowerZoomTile(x, y, zoom, this.maximumNativeZ);
 		}
 
-    if (image == null && zoom <= maximumZ) {
-      Log.d("urlTile", "getTileImage");
+		if (image == null && zoom <= maximumZ) {
+			Log.d("urlTile", "getTileImage");
 			image = getTileImage(x, y, zoom);
 		}
 
-    if (image == null && this.tileCachePath != null && this.offlineMode) {
-      Log.d("urlTile", "findLowerZoomTileForScaling");
-      int zoomLevelToStart = (zoom > this.maximumNativeZ) ? this.maximumNativeZ - 1 : zoom - 1; 
-      int minimumZoomToSearch = Math.max(this.minimumZ, zoom - 3);
-      for (int tryZoom = zoomLevelToStart; tryZoom >= minimumZoomToSearch; tryZoom--) {
-  			image = scaleLowerZoomTile(x, y, zoom, tryZoom);
-	  		if (image != null) {
-		  		break;
-			  }
-      }
+		if (image == null && this.tileCachePath != null && this.offlineMode) {
+			Log.d("urlTile", "findLowerZoomTileForScaling");
+			int zoomLevelToStart = (zoom > this.maximumNativeZ) ? this.maximumNativeZ - 1 : zoom - 1;
+			int minimumZoomToSearch = this.minimumZ >= zoom - 3 ? this.minimumZ : zoom - 3;
+			for (int tryZoom = zoomLevelToStart; tryZoom >= minimumZoomToSearch; tryZoom--) {
+				image = scaleLowerZoomTile(x, y, zoom, tryZoom);
+				if (image != null) {
+					break;
+				}
+			}
 		}
 
 		return image == null ? null : new Tile(this.tileSize, this.tileSize, image);
@@ -247,19 +265,19 @@ public class MapTileProvider implements TileProvider {
     bitmap = BitmapFactory.decodeByteArray(leftTop, 0, leftTop.length);
     canvas.drawBitmap(bitmap, 0, 0, paint);
     bitmap.recycle();
-    
+
     bitmap = BitmapFactory.decodeByteArray(leftBottom, 0, leftBottom.length);
     canvas.drawBitmap(bitmap, 0, 256, paint);
     bitmap.recycle();
-    
+
     bitmap = BitmapFactory.decodeByteArray(rightTop, 0, rightTop.length);
     canvas.drawBitmap(bitmap, 256, 0, paint);
     bitmap.recycle();
-  
+
     bitmap = BitmapFactory.decodeByteArray(rightBottom, 0, rightBottom.length);
     canvas.drawBitmap(bitmap, 256, 256, paint);
     bitmap.recycle();
-    
+
     data = bitmapToByteArray(image);
     image.recycle();
     return data;
@@ -287,11 +305,11 @@ public class MapTileProvider implements TileProvider {
 	byte[] scaleLowerZoomTile(int x, int y, int zoom, int maximumZoom) {
     int overZoomLevel = zoom - maximumZoom;
     int zoomFactor = 1 << overZoomLevel;
-    
+
     int xParent = x >> overZoomLevel;
     int yParent = y >> overZoomLevel;
     int zoomParent = zoom - overZoomLevel;
-    
+
     int xOffset = x % zoomFactor;
     int yOffset = y % zoomFactor;
 
@@ -302,7 +320,7 @@ public class MapTileProvider implements TileProvider {
 
 		data = getTileImage(xParent, yParent, zoomParent);
     if (data == null) return null;
-    
+
     Bitmap sourceImage;
     sourceImage = BitmapFactory.decodeByteArray(data, 0, data.length);
 
@@ -315,7 +333,7 @@ public class MapTileProvider implements TileProvider {
     data = bitmapToByteArray(image);
     image.recycle();
     return data;
-	} 
+	}
 
 	void checkForRefresh(int x, int y, int zoom) {
 		String fileName =  getTileFilename(x, y, zoom);
@@ -371,7 +389,7 @@ public class MapTileProvider implements TileProvider {
 			if (buffer != null) try { buffer.close(); } catch (Exception ignored) {}
 		}
 	}
-	
+
 	byte[] readTileImage(int x, int y, int zoom) {
 		InputStream in = null;
 		ByteArrayOutputStream buffer = null;
@@ -437,18 +455,26 @@ public class MapTileProvider implements TileProvider {
 		return this.tileCachePath + '/' + zoom +
 			"/" + x + "/" + y;
 	}
-	
+
 	protected URL getTileUrl(int x, int y, int zoom) {
 		return this.tileProvider.getTileUrl(x, y, zoom);
 	}
-	
+
 	public void setUrlTemplate(String urlTemplate) {
 		this.urlTemplate = urlTemplate;
 	}
 
+	public void setUrlCdn(String urlCdn) {
+		this.urlCdn = urlCdn;
+	}
+
+	public void setUrlCdnSuffix(String urlCdnSuffix) {
+		this.urlCdnSuffix = urlCdnSuffix;
+	}
+
 	public void setTileSize(int tileSize) {
 		if (this.tileSize != tileSize) {
-			this.tileProvider = new AIRMapUrlTileProvider(tileSize, tileSize, urlTemplate);
+			this.tileProvider = new AIRMapUrlTileProvider(tileSize, tileSize, urlTemplate, urlCdn, urlCdnSuffix);
 		}
 		this.tileSize = tileSize;
 	}

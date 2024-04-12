@@ -798,19 +798,27 @@ class MapView extends React.Component<MapViewProps, State> {
     }
   }
 
-  animateCamera(camera: Partial<Camera>, opts?: {duration?: number}) {
+  animateCamera(camera: Partial<Camera>, options: FitToOptions = {}) {
     if (this.map.current) {
+      const {
+        edgePadding = {top: 0, right: 0, bottom: 0, left: 0},
+        duration = 500,
+      } = options;
       Commands.animateCamera(
         this.map.current,
         camera,
-        opts?.duration ? opts.duration : 500,
+        duration,
+        edgePadding
       );
     }
   }
 
-  animateToRegion(region: Region, duration: number = 500) {
+  animateToRegion(region: Region, duration: number = 500, options: FitToOptions = {}) {
     if (this.map.current) {
-      Commands.animateToRegion(this.map.current, region, duration);
+      const {
+        edgePadding = {top: 0, right: 0, bottom: 0, left: 0},
+      } = options;
+      Commands.animateToRegion(this.map.current, region, duration, edgePadding);
     }
   }
 

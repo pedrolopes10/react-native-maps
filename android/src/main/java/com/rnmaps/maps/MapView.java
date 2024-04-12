@@ -78,8 +78,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-public class MapView extends com.google.android.gms.maps.MapView implements GoogleMap.InfoWindowAdapter,
-    GoogleMap.OnMarkerDragListener, OnMapReadyCallback, GoogleMap.OnPoiClickListener, GoogleMap.OnIndoorStateChangeListener {
+public class MapView extends com.google.android.gms.maps.MapView implements GoogleMap.InfoWindowAdapter, OnMapReadyCallback {
   public GoogleMap map;
   private MarkerManager markerManager;
   private MarkerManager.Collection markerCollection;
@@ -109,6 +108,7 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
   private ReadableMap camera;
   private String customMapStyleString;
   private boolean initialRegionSet = false;
+  private boolean initialCameraSet = false;
   private LatLngBounds cameraLastIdleBounds;
   private int cameraMoveReason = 0;
   private MapMarker selectedMarker;
@@ -166,8 +166,8 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
   }
 
   public MapView(ThemedReactContext reactContext, ReactApplicationContext appContext,
-                 MapManager manager,
-                 GoogleMapOptions googleMapOptions) {
+      MapManager manager,
+      GoogleMapOptions googleMapOptions) {
     super(getNonBuggyContext(reactContext, appContext), googleMapOptions);
 
     this.manager = manager;
@@ -248,12 +248,14 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
     groundOverlayManager = new GroundOverlayManager(map);
     groundOverlayCollection = groundOverlayManager.newCollection();
 
-    markerCollection.setInfoWindowAdapter(this);
-    markerCollection.setOnMarkerDragListener(this);
-    this.map.setOnPoiClickListener(this);
-    this.map.setOnIndoorStateChangeListener(this);
+    this.map.setInfoWindowAdapter(this);
 
     applyBridgedProps();
+
+    if(initialRegion != null) {
+      setRegion(initialRegion);
+      initialRegionSet = true;
+    }
 
     manager.pushEvent(context, this, "onMapReady", new WritableNativeMap());
 
@@ -272,7 +274,9 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
         coordinate.putDouble("accuracy", location.getAccuracy());
         coordinate.putDouble("speed", location.getSpeed());
         coordinate.putDouble("heading", location.getBearing());
-        coordinate.putBoolean("isFromMockProvider", location.isFromMockProvider());
+        if(android.os.Build.VERSION.SDK_INT >= 18){
+          coordinate.putBoolean("isFromMockProvider", location.isFromMockProvider());
+        }
 
         event.putMap("coordinate", coordinate);
 
@@ -285,7 +289,12 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
       public boolean onMarkerClick(@NonNull Marker marker) {
         MapMarker airMapMarker = getMarkerMap(marker);
 
+        if(airMapMarker == null){
+            return false;
+        }
+
         WritableMap event = makeClickEventData(marker.getPosition());
+        event = makeClickEventData(marker.getPosition());
         event.putString("action", "marker-press");
         event.putString("id", airMapMarker.getIdentifier());
         manager.pushEvent(context, view, "onMarkerPress", event);
@@ -314,7 +323,9 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
       public void onPolygonClick(@NonNull Polygon polygon) {
         WritableMap event = makeClickEventData(tapLocation);
         event.putString("action", "polygon-press");
-        manager.pushEvent(context, polygonMap.get(polygon), "onPress", event);
+        if(polygonMap.get(polygon) != null) {
+            manager.pushEvent(context, polygonMap.get(polygon), "onPress", event);
+        }
       }
     });
 
@@ -323,7 +334,9 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
       public void onPolylineClick(@NonNull Polyline polyline) {
         WritableMap event = makeClickEventData(tapLocation);
         event.putString("action", "polyline-press");
-        manager.pushEvent(context, polylineMap.get(polyline), "onPress", event);
+        if(polylineMap.get(polyline) != null) {
+            manager.pushEvent(context, polylineMap.get(polyline), "onPress", event);
+        }
       }
     });
 
@@ -470,7 +483,7 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
     if (selectedMarker == target) {
       return;
     }
-    
+
     WritableMap event;
 
     if (selectedMarker != null) {
@@ -550,6 +563,13 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
     }
   }
 
+  public void setInitialCamera(ReadableMap initialCamera) {
+    if (!initialCameraSet && initialCamera != null) {
+      setCamera(initialCamera);
+      initialCameraSet = true;
+    }
+  }
+
   private void moveToRegion(ReadableMap region) {
     if (region == null) return;
 
@@ -558,8 +578,8 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
     double lngDelta = region.getDouble("longitudeDelta");
     double latDelta = region.getDouble("latitudeDelta");
     LatLngBounds bounds = new LatLngBounds(
-            new LatLng(lat - latDelta / 2, lng - lngDelta / 2), // southwest
-            new LatLng(lat + latDelta / 2, lng + lngDelta / 2)  // northeast
+        new LatLng(lat - latDelta / 2, lng - lngDelta / 2), // southwest
+        new LatLng(lat + latDelta / 2, lng + lngDelta / 2)  // northeast
     );
     if (super.getHeight() <= 0 || super.getWidth() <= 0) {
       // in this case, our map has not been laid out yet, so we save the bounds in a local
@@ -583,27 +603,46 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
 
   public void setCamera(ReadableMap camera) {
     this.camera = camera;
+
     if(camera != null && map != null) {
       moveToCamera(camera);
     }
+
   }
-public static CameraPosition cameraPositionFromMap(ReadableMap camera){
+  public void setCamera(ReadableMap camera, ReadableMap edgePadding) {
+    this.camera = camera;
+
+    if (edgePadding != null) {
+      map.setPadding(edgePadding.getInt("left"), edgePadding.getInt("top"),
+          edgePadding.getInt("right"), edgePadding.getInt("bottom"));
+    }
+
+    if(camera != null && map != null) {
+      moveToCamera(camera);
+    }
+
+    if (edgePadding != null) {
+      map.setPadding(0, 0, 0, 0);
+    }
+  }
+
+  public static CameraPosition cameraPositionFromMap(ReadableMap camera){
   if (camera == null) return null;
 
-  CameraPosition.Builder builder = new CameraPosition.Builder();
+    CameraPosition.Builder builder = new CameraPosition.Builder();
 
-  ReadableMap center = camera.getMap("center");
-  if (center != null) {
-    double lng = center.getDouble("longitude");
-    double lat = center.getDouble("latitude");
-    builder.target(new LatLng(lat, lng));
-  }
+    ReadableMap center = camera.getMap("center");
+    if (center != null) {
+      double lng = center.getDouble("longitude");
+      double lat = center.getDouble("latitude");
+      builder.target(new LatLng(lat, lng));
+    }
 
-  builder.tilt((float)camera.getDouble("pitch"));
-  builder.bearing((float)camera.getDouble("heading"));
-  builder.zoom((float)camera.getDouble("zoom"));
+    builder.tilt((float)camera.getDouble("pitch"));
+    builder.bearing((float)camera.getDouble("heading"));
+    builder.zoom((float)camera.getDouble("zoom"));
 
-  return builder.build();
+    return builder.build();
 }
   public void moveToCamera(ReadableMap cameraMap) {
     CameraPosition camera = cameraPositionFromMap(cameraMap);
@@ -811,7 +850,7 @@ public static CameraPosition cameraPositionFromMap(ReadableMap camera){
       attacherGroup.removeView(feature);
     } else if (feature instanceof MapHeatmap) {
       heatmapMap.remove(feature.getFeature());
-      feature.removeFromMap(map);
+    feature.removeFromMap(map);
     } else if(feature instanceof MapCircle) {
       feature.removeFromMap(circleCollection);
     } else if(feature instanceof MapOverlay) {
@@ -821,8 +860,8 @@ public static CameraPosition cameraPositionFromMap(ReadableMap camera){
     } else if(feature instanceof  MapPolyline) {
       feature.removeFromMap(polylineCollection);
     } else {
-      feature.removeFromMap(map);
-    }
+    feature.removeFromMap(map);
+}
   }
 
   public WritableMap makeClickEventData(LatLng point) {
@@ -869,7 +908,7 @@ public static CameraPosition cameraPositionFromMap(ReadableMap camera){
     }
   }
 
-  public void animateToCamera(ReadableMap camera, int duration) {
+  public void animateToCamera(ReadableMap camera, int duration, ReadableMap edgePadding) {
     if (map == null) return;
     CameraPosition.Builder builder = new CameraPosition.Builder(map.getCameraPosition());
     if (camera.hasKey("zoom")) {
@@ -888,25 +927,47 @@ public static CameraPosition cameraPositionFromMap(ReadableMap camera){
 
     CameraUpdate update = CameraUpdateFactory.newCameraPosition(builder.build());
 
+    if (edgePadding != null) {
+      map.setPadding(edgePadding.getInt("left"), edgePadding.getInt("top"),
+          edgePadding.getInt("right"), edgePadding.getInt("bottom"));
+    }
+
     if (duration <= 0) {
       map.moveCamera(update);
     }
     else {
       map.animateCamera(update, duration, null);
     }
+
+    if (edgePadding != null) {
+      map.setPadding(0, 0, 0, 0);
+    }
   }
 
-  public void animateToRegion(LatLngBounds bounds, int duration) {
+  public void animateToRegion(LatLngBounds bounds, int duration, ReadableMap edgePadding) {
     if (map == null) return;
+
+    if (edgePadding != null) {
+      map.setPadding(edgePadding.getInt("left"), edgePadding.getInt("top"),
+      edgePadding.getInt("right"), edgePadding.getInt("bottom"));
+    }
+
     if(duration <= 0) {
       map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 0));
     } else {
       map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 0), duration, null);
     }
+
+    map.setPadding(0, 0, 0, 0);
   }
 
-  public void fitToElements(ReadableMap edgePadding, boolean animated) {
+  public void fitToElements(ReadableMap edgePadding, boolean animated, int duration) {
     if (map == null) return;
+
+    if (edgePadding != null) {
+      map.setPadding(edgePadding.getInt("left"), edgePadding.getInt("top"),
+          edgePadding.getInt("right"), edgePadding.getInt("bottom"));
+    }
 
     LatLngBounds.Builder builder = new LatLngBounds.Builder();
 
@@ -930,11 +991,17 @@ public static CameraPosition cameraPositionFromMap(ReadableMap camera){
       }
 
       if (animated) {
-        map.animateCamera(cu);
+          if (duration != 0) {
+            map.animateCamera(cu, duration, null);
+          } else {
+            map.animateCamera(cu);
+          }
       } else {
         map.moveCamera(cu);
       }
     }
+
+    map.setPadding(0, 0, 0, 0);
   }
 
   public void fitToSuppliedMarkers(ReadableArray markerIDsArray, ReadableMap edgePadding, boolean animated) {
@@ -1084,9 +1151,10 @@ public static CameraPosition cameraPositionFromMap(ReadableMap camera){
 
   @Override
   public boolean dispatchTouchEvent(MotionEvent ev) {
+    if (map == null) return false;
     gestureDetector.onTouchEvent(ev);
 
-    int X = (int)ev.getX();          
+    int X = (int)ev.getX();
     int Y = (int)ev.getY();
     if(map != null) {
       tapLocation = map.getProjection().fromScreenLocation(new Point(X,Y));
@@ -1106,46 +1174,6 @@ public static CameraPosition cameraPositionFromMap(ReadableMap camera){
     }
     super.dispatchTouchEvent(ev);
     return true;
-  }
-
-  @Override
-  public void onMarkerDragStart(Marker marker) {
-    WritableMap event = makeClickEventData(marker.getPosition());
-    manager.pushEvent(context, this, "onMarkerDragStart", event);
-
-    MapMarker markerView = getMarkerMap(marker);
-    event = makeClickEventData(marker.getPosition());
-    manager.pushEvent(context, markerView, "onDragStart", event);
-  }
-
-  @Override
-  public void onMarkerDrag(Marker marker) {
-    WritableMap event = makeClickEventData(marker.getPosition());
-    manager.pushEvent(context, this, "onMarkerDrag", event);
-
-    MapMarker markerView = getMarkerMap(marker);
-    event = makeClickEventData(marker.getPosition());
-    manager.pushEvent(context, markerView, "onDrag", event);
-  }
-
-  @Override
-  public void onMarkerDragEnd(Marker marker) {
-    WritableMap event = makeClickEventData(marker.getPosition());
-    manager.pushEvent(context, this, "onMarkerDragEnd", event);
-
-    MapMarker markerView = getMarkerMap(marker);
-    event = makeClickEventData(marker.getPosition());
-    manager.pushEvent(context, markerView, "onDragEnd", event);
-  }
-
-  @Override
-  public void onPoiClick(PointOfInterest poi) {
-    WritableMap event = makeClickEventData(poi.latLng);
-
-    event.putString("placeId", poi.placeId);
-    event.putString("name", poi.name);
-
-    manager.pushEvent(context, this, "onPoiClick", event);
   }
 
   private ProgressBar getMapLoadingProgressBar() {
@@ -1235,10 +1263,12 @@ public static CameraPosition cameraPositionFromMap(ReadableMap camera){
   }
 
   public void onPanDrag(MotionEvent ev) {
-    Point point = new Point((int) ev.getX(), (int) ev.getY());
-    LatLng coords = this.map.getProjection().fromScreenLocation(point);
-    WritableMap event = makeClickEventData(coords);
-    manager.pushEvent(context, this, "onPanDrag", event);
+      if(this.map != null) {
+        Point point = new Point((int) ev.getX(), (int) ev.getY());
+        LatLng coords = this.map.getProjection().fromScreenLocation(point);
+        WritableMap event = makeClickEventData(coords);
+        manager.pushEvent(context, this, "onPanDrag", event);
+      }
   }
 
   public void onDoublePress(MotionEvent ev) {
@@ -1337,67 +1367,6 @@ public static CameraPosition cameraPositionFromMap(ReadableMap camera){
     } catch (XmlPullParserException | IOException | InterruptedException | ExecutionException e) {
       e.printStackTrace();
     }
-  }
-
-  @Override
-  public void onIndoorBuildingFocused() {
-    IndoorBuilding building = this.map.getFocusedBuilding();
-    if (building != null) {
-      List<IndoorLevel> levels = building.getLevels();
-      int index = 0;
-      WritableArray levelsArray = Arguments.createArray();
-      for (IndoorLevel level : levels) {
-        WritableMap levelMap = Arguments.createMap();
-        levelMap.putInt("index", index);
-        levelMap.putString("name", level.getName());
-        levelMap.putString("shortName", level.getShortName());
-        levelsArray.pushMap(levelMap);
-        index++;
-      }
-      WritableMap event = Arguments.createMap();
-      WritableMap indoorBuilding = Arguments.createMap();
-      indoorBuilding.putArray("levels", levelsArray);
-      indoorBuilding.putInt("activeLevelIndex", building.getActiveLevelIndex());
-      indoorBuilding.putBoolean("underground", building.isUnderground());
-
-      event.putMap("IndoorBuilding", indoorBuilding);
-
-      manager.pushEvent(context, this, "onIndoorBuildingFocused", event);
-    } else {
-      WritableMap event = Arguments.createMap();
-      WritableArray levelsArray = Arguments.createArray();
-      WritableMap indoorBuilding = Arguments.createMap();
-      indoorBuilding.putArray("levels", levelsArray);
-      indoorBuilding.putInt("activeLevelIndex", 0);
-      indoorBuilding.putBoolean("underground", false);
-
-      event.putMap("IndoorBuilding", indoorBuilding);
-
-      manager.pushEvent(context, this, "onIndoorBuildingFocused", event);
-    }
-  }
-
-  @Override
-  public void onIndoorLevelActivated(IndoorBuilding building) {
-    if (building == null) {
-      return;
-    }
-    int activeLevelIndex = building.getActiveLevelIndex();
-    if (activeLevelIndex < 0 || activeLevelIndex >= building.getLevels().size()) {
-      return;
-    }
-    IndoorLevel level = building.getLevels().get(activeLevelIndex);
-
-    WritableMap event = Arguments.createMap();
-    WritableMap indoorlevel = Arguments.createMap();
-
-    indoorlevel.putInt("activeLevelIndex", activeLevelIndex);
-    indoorlevel.putString("name", level.getName());
-    indoorlevel.putString("shortName", level.getShortName());
-
-    event.putMap("IndoorLevel", indoorlevel);
-
-    manager.pushEvent(context, this, "onIndoorLevelActivated", event);
   }
 
   public void setIndoorActiveLevelIndex(int activeLevelIndex) {

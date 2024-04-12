@@ -28,12 +28,11 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
     NSInteger _zIndexBeforeOpen;
 }
 
-- (instancetype)initWithFrame:(CGRect)frame {
-    self = [super initWithFrame:frame];
-    if (self) {
-        [self.layer addObserver:self forKeyPath:@"zPosition" options:NSKeyValueObservingOptionNew context:nil];
-    }
-    return self;
+- (void)prepareForReuse {
+    [self prepareForReuse];
+
+    _rotation = 0;
+    self.transform = CGAffineTransformIdentity;
 }
 
 - (void)reactSetFrame:(CGRect)frame
@@ -104,6 +103,8 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
         // In either case, we want to return the AIRMapMarker since it is both an MKAnnotation and an
         // MKAnnotationView all at the same time.
         self.layer.zPosition = self.zIndex;
+        self.transform = CGAffineTransformMakeRotation(self.rotation);
+
         return self;
     }
 }
@@ -206,39 +207,13 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
 
     if (marker.selected) {
         CGPoint touchPoint = [recognizer locationInView:marker.map.calloutView];
-        CGRect bubbleFrame = [self.calloutView convertRect:marker.map.calloutView.bounds toView:marker.map];
-        CGPoint touchPointReal = [recognizer locationInView:self.calloutView];
+        if ([marker.map.calloutView hitTest:touchPoint withEvent:nil]) {
 
-        UIView *calloutView = [marker.map.calloutView hitTest:touchPoint withEvent:nil];
-        if (calloutView) {
-            // the callout (or its subview) got clicked, not the marker
-            UIWindow* win = [[[UIApplication sharedApplication] windows] firstObject];
-            AIRMapCalloutSubview* calloutSubview = nil;
-            UIView* tmp = calloutView;
-            while (tmp && tmp != win && tmp != self.calloutView && tmp != self.map) {
-                if ([tmp respondsToSelector:@selector(onPress)]) {
-                    calloutSubview = (AIRMapCalloutSubview*) tmp;
-                    break;
-                }
-                tmp = tmp.superview;
-            }
-
+            // the callout got clicked, not the marker
             id event = @{
-                         @"action": calloutSubview ? @"callout-inside-press" : @"callout-press",
-                         @"id": marker.identifier ?: @"unknown",
-                         @"point": @{
-                                 @"x": @(touchPointReal.x),
-                                 @"y": @(touchPointReal.y),
-                                 },
-                         @"frame": @{
-                             @"x": @(bubbleFrame.origin.x),
-                             @"y": @(bubbleFrame.origin.y),
-                             @"width": @(bubbleFrame.size.width),
-                             @"height": @(bubbleFrame.size.height),
-                             }
+                         @"action": @"callout-press",
                          };
 
-            if (calloutSubview) calloutSubview.onPress(event);
             if (marker.onCalloutPress) marker.onCalloutPress(event);
             if (marker.calloutView && marker.calloutView.onPress) marker.calloutView.onPress(event);
             if (marker.map.onCalloutPress) marker.map.onCalloutPress(event);
@@ -306,6 +281,15 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
   [self setAlpha:opacity];
 }
 
+- (void)setRotation:(CLLocationDegrees)newRotationInDegrees {
+    // set rotation, converting degrees to radians
+    _rotation = newRotationInDegrees * M_PI / 180.0;
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.transform = CGAffineTransformMakeRotation(self.rotation);
+    });
+}
+
 - (void)setImageSrc:(NSString *)imageSrc
 {
     _imageSrc = imageSrc;
@@ -346,20 +330,6 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
     _zIndexBeforeOpen = zIndex;
     _zIndex = _calloutIsOpen ? zIndex + AIR_CALLOUT_OPEN_ZINDEX_BASELINE : zIndex;
     self.layer.zPosition = zIndex;
-}
-
-- (BOOL)isSelected {
-  return _isPreselected || [super isSelected];
-}
-
-- (void)dealloc {
-    [self.layer removeObserver:self forKeyPath:@"zPosition"];
-}
-
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
-    if ([keyPath isEqualToString:@"zPosition"]) {
-        self.layer.zPosition = _zIndex;
-    }
 }
 
 @end

@@ -13,6 +13,7 @@ interface NativeCommands {
     >,
     region: Region,
     duration: number,
+    edgePadding: EdgePadding,
   ) => void;
 
   setCamera: (
@@ -28,6 +29,7 @@ interface NativeCommands {
     >,
     camera: Partial<Camera>,
     duration: number,
+    edgePadding: EdgePadding,
   ) => void;
 
   fitToElements: (

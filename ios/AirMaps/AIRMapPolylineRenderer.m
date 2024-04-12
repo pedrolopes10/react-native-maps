@@ -39,7 +39,7 @@
 @end
 
 @implementation AIRMapPolylineRenderer {
-    MKPolyline* _polyline;
+    MKGeodesicPolyline* _polyline;
     NSArray<UIColor *> *_strokeColors;
     MKMapSnapshot* _snapshot;
     CLLocationCoordinate2D* _coordinates;
@@ -47,7 +47,7 @@
 
 @synthesize strokeColors;
 
-- (id)initWithOverlay:(id<MKOverlay>)overlay polyline:(MKPolyline*)polyline
+- (id)initWithOverlay:(id<MKOverlay>)overlay polyline:(MKGeodesicPolyline*)polyline
 {
     self = [super initWithOverlay:overlay];
     if (self){
@@ -57,7 +57,7 @@
     return self;
 }
 
-- (id)initWithSnapshot:(MKMapSnapshot*)snapshot overlay:(id<MKOverlay>)overlay polyline:(MKPolyline*)polyline
+- (id)initWithSnapshot:(MKMapSnapshot*)snapshot overlay:(id<MKOverlay>)overlay polyline:(MKGeodesicPolyline*)polyline
 {
     self = [super initWithOverlay:overlay];
     if (self){
@@ -119,31 +119,31 @@
         CGPoint point = [self pointForIndex:i];
         UIColor* color = [self colorForIndex:i];
         if (segment == nil) {
-            
+
             // Start new segment
             segment = [[AIRMapPolylineRendererSegment alloc] initWithPoint:point color:color];
             [segments addObject:segment];
         }
         else if (((color == nil) && (segment.endColor == nil)) ||
                  ((color != nil) && [segment.startColor isEqual:color])) {
-            
+
             // Append point to segment
             [segment addPoint:point color: color];
         }
         else {
-            
+
             // Close the last segment if needed
             if (segment.endColor == nil) {
                 [segment addPoint:point color:color];
             }
             else {
-                
+
                 // Add transition gradient
                 segment = [[AIRMapPolylineRendererSegment alloc] initWithPoint:segment.endPoint color:segment.endColor];
                 [segment addPoint:point color:color];
                 [segments addObject:segment];
             }
-            
+
             // Start new segment
             if (i < (n - 1)) {
                 segment = [[AIRMapPolylineRendererSegment alloc] initWithPoint:point color:color];
@@ -151,12 +151,12 @@
             }
         }
     }
-    
+
     // Remove last segment in case it only contains a single path point
     if ((segment != nil) && (segment.endColor == nil)) {
         [segments removeLastObject];
     }
-    
+
     return segments;
 }
 
@@ -179,7 +179,7 @@
     CGRect pointsRect = CGPathGetBoundingBox(self.path);
     CGRect mapRectCG = [self rectForMapRect:mapRect];
     if (!CGRectIntersectsRect(pointsRect, mapRectCG)) return;
-    
+
     [self drawWithZoomScale:zoomScale inContext:context];
 }
 
@@ -196,14 +196,14 @@
         dashes[i] = self.lineDashPattern[i].floatValue;
     }
     CGContextSetLineDash(context, self.lineDashPhase, dashes, self.lineDashPattern.count);
-    
+
     NSArray* segments = [self createSegments];
     for (NSUInteger i = 0, n = segments.count; i < n; i++) {
         AIRMapPolylineRendererSegment* segment = segments[i];
-        
+
         CGContextBeginPath(context);
         CGContextAddPath(context, segment.path);
-        
+
         // When segment has two colors, draw it as a gradient
         if (![segment.startColor isEqual:segment.endColor]) {
             CGFloat pc_r,pc_g,pc_b,pc_a,
@@ -216,7 +216,7 @@
             CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
             CGGradientRef gradient = CGGradientCreateWithColorComponents(colorSpace, gradientColors, gradientLocation, 2);
             CGColorSpaceRelease(colorSpace);
-            
+
             CGContextReplacePathWithStrokedPath(context);
             CGContextClip(context);
             CGContextDrawLinearGradient(

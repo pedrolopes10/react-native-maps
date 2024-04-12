@@ -1,10 +1,10 @@
 package com.rnmaps.maps;
 
 import android.content.Context;
+import android.graphics.Color;
 
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
-import com.google.android.gms.maps.model.Cap;
 import com.google.android.gms.maps.model.Dash;
 import com.google.android.gms.maps.model.Dot;
 import com.google.android.gms.maps.model.Gap;
@@ -15,133 +15,116 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.RoundCap;
 import com.google.maps.android.collections.PolylineManager;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MapPolyline extends MapFeature {
 
-  private PolylineOptions polylineOptions;
+  private List<Polyline> polylineArray;
+  private List<PolylineOptions> polylineOptions;
   private Polyline polyline;
 
   private List<LatLng> coordinates;
+  private List<String> strokeColors;
+  private Integer lineDashPatternDash;
+  private Integer lineDashPatternGap;
   private int color;
   private float width;
-  private boolean tappable;
   private boolean geodesic;
   private float zIndex;
-  private Cap lineCap = new RoundCap();
-  private ReadableArray patternValues;
-  private List<PatternItem> pattern;
+  private String type;
 
   public MapPolyline(Context context) {
     super(context);
   }
 
-  public void setCoordinates(ReadableArray coordinates) {
-    this.coordinates = new ArrayList<>(coordinates.size());
-    for (int i = 0; i < coordinates.size(); i++) {
-      ReadableMap coordinate = coordinates.getMap(i);
+  public void setType(String type) {
+    this.type = type;
+  }
+
+  public void setSyncedCoordsColors(ReadableArray syncedCoordsColors) {
+    this.coordinates = new ArrayList<>(syncedCoordsColors.getArray(0).size());
+    for (int i = 0; i < syncedCoordsColors.getArray(0).size(); i++) {
+      ReadableMap coordinate = syncedCoordsColors.getArray(0).getMap(i);
       this.coordinates.add(i,
-          new LatLng(coordinate.getDouble("latitude"), coordinate.getDouble("longitude")));
+        new LatLng(coordinate.getDouble("latitude"), coordinate.getDouble("longitude")));
     }
-    if (polyline != null) {
+
+    if(syncedCoordsColors.getArray(1) != null){
+        this.strokeColors = new ArrayList<>(syncedCoordsColors.getArray(1).size());
+        for (int i = 0; i < syncedCoordsColors.getArray(1).size(); i++) {
+          String strokeColor = syncedCoordsColors.getArray(1).getString(i);
+          this.strokeColors.add(i, strokeColor);
+        }
+    }
+
+    if (polyline != null && (type.equals("fake") || type.equals("single"))) {
       polyline.setPoints(this.coordinates);
+      // don't know how to create a polyline without access to PolylineManager.Collection
+      // this.map does not exist any longer
+      // polylines are now added through the collection on MapView.java
+      // also could not fine uses of this method (setSyncedCoordsColors)
+    // } else if (polyline != null && type.equals("actual")){
+    //   removeFromMap(this.map);
+    //   createPolyline();
     }
   }
 
   public void setColor(int color) {
     this.color = color;
-    if (polyline != null) {
-      polyline.setColor(color);
-    }
   }
 
   public void setWidth(float width) {
     this.width = width;
-    if (polyline != null) {
-      polyline.setWidth(width);
-    }
   }
 
   public void setZIndex(float zIndex) {
     this.zIndex = zIndex;
-    if (polyline != null) {
-      polyline.setZIndex(zIndex);
-    }
-  }
-
-  public void setTappable(boolean tapabble) {
-    this.tappable = tapabble;
-    if (polyline != null) {
-      polyline.setClickable(tappable);
-    }
   }
 
   public void setGeodesic(boolean geodesic) {
     this.geodesic = geodesic;
-    if (polyline != null) {
-      polyline.setGeodesic(geodesic);
+  }
+
+  public void setLineDashPattern(ReadableArray lineDashPattern) {
+    if(lineDashPattern != null && lineDashPattern.size() > 0){
+      this.lineDashPatternDash = lineDashPattern.getInt(0);
+      this.lineDashPatternGap = lineDashPattern.getInt(1);
     }
   }
 
-  public void setLineCap(Cap cap) {
-    this.lineCap = cap;
-    if (polyline != null) {
-      polyline.setStartCap(cap);
-      polyline.setEndCap(cap);
-    }
-    this.applyPattern();
-  }
+  private void createPolyline() {
+    this.polylineOptions = new ArrayList<>(coordinates.size());
+    for (int i = 0; i < coordinates.size()-1; i++) {
+      PolylineOptions options = new PolylineOptions();
 
-  public void setLineDashPattern(ReadableArray patternValues) {
-    this.patternValues = patternValues;
-    this.applyPattern();
-  }
+      LatLng coordinate = coordinates.get(i);
+      options.add(coordinate);
 
-  private void applyPattern() {
-    if(patternValues == null) {
-      return;
-    }
-    this.pattern = new ArrayList<>(patternValues.size());
-    for (int i = 0; i < patternValues.size(); i++) {
-      float patternValue = (float) patternValues.getDouble(i);
-      boolean isGap = i % 2 != 0;
-      if(isGap) {
-        this.pattern.add(new Gap(patternValue));
-      }else {
-        PatternItem patternItem;
-        boolean isLineCapRound = this.lineCap instanceof RoundCap;
-        if(isLineCapRound) {
-          patternItem = new Dot();
-        }else {
-          patternItem = new Dash(patternValue);
-        }
-        this.pattern.add(patternItem);
+      LatLng coordinate2 = coordinates.get(i+1);
+      options.add(coordinate2);
+
+      Integer colorToUse;
+
+      if((strokeColors != null) && (strokeColors.size() > 0) && (strokeColors.size() == coordinates.size()) && (!"undefined".equals(strokeColors.get(i))) && (strokeColors.get(i) != null)){
+        colorToUse = Color.parseColor(strokeColors.get(i));
+      } else {
+        colorToUse = color;
       }
-    }
-    if(polyline != null) {
-      polyline.setPattern(this.pattern);
-    }
-  }
 
-  public PolylineOptions getPolylineOptions() {
-    if (polylineOptions == null) {
-      polylineOptions = createPolylineOptions();
-    }
-    return polylineOptions;
-  }
+      options.color(colorToUse);
+      options.width(width);
+      options.geodesic(geodesic);
+      options.zIndex(zIndex);
 
-  private PolylineOptions createPolylineOptions() {
-    PolylineOptions options = new PolylineOptions();
-    options.addAll(coordinates);
-    options.color(color);
-    options.width(width);
-    options.geodesic(geodesic);
-    options.zIndex(zIndex);
-    options.startCap(lineCap);
-    options.endCap(lineCap);
-    options.pattern(this.pattern);
-    return options;
+      if(lineDashPatternDash != null){
+        List<PatternItem> pattern = Arrays.<PatternItem>asList(new Dash(this.lineDashPatternDash), new Gap(this.lineDashPatternGap));
+        options.pattern(pattern);
+      }
+
+      this.polylineOptions.add(i, options);
+    }
   }
 
   @Override
@@ -152,13 +135,25 @@ public class MapPolyline extends MapFeature {
   @Override
   public void addToMap(Object collection) {
     PolylineManager.Collection polylineCollection = (PolylineManager.Collection) collection;
-    polyline = polylineCollection.addPolyline(getPolylineOptions());
-    polyline.setClickable(this.tappable);
+    createPolyline();
+    this.polylineArray = new ArrayList<>(this.polylineOptions.size());
+    for (int i = 0; i < this.polylineOptions.size(); i++) {
+      Polyline segment = polylineCollection.addPolyline(this.polylineOptions.get(i));
+      segment.setClickable(false);
+      polyline = segment;
+      this.polylineArray.add(i, segment);
+    }
   }
 
   @Override
   public void removeFromMap(Object collection) {
     PolylineManager.Collection polylineCollection = (PolylineManager.Collection) collection;
-    polylineCollection.remove(polyline);
+    for (int i = 0; i < this.polylineArray.size(); i++) {
+      Polyline segment = this.polylineArray.get(i);
+      segment.remove();
+      polylineCollection.remove(segment);
+    }
+    this.polylineArray.clear();
+    this.polylineOptions.clear();
   }
 }

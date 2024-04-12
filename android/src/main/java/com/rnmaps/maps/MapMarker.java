@@ -411,6 +411,12 @@ public class MapMarker extends MapFeature {
   }
 
   @Override
+  public void removeView(View child) {
+    super.removeView(child);
+    detachViewFromParent(child);
+  }
+
+  @Override
   public void requestLayout() {
     super.requestLayout();
 
@@ -444,6 +450,10 @@ public class MapMarker extends MapFeature {
     }
     MarkerManager.Collection markerCollection = (MarkerManager.Collection) collection;
     markerCollection.remove(marker);
+    if (MapMarker.this.markerManager != null && MapMarker.this.imageUri != null) {
+      MapMarker.this.markerManager.getSharedIcon(MapMarker.this.imageUri)
+          .removeMarker(MapMarker.this);
+    }
     marker = null;
     updateTracksViewChanges();
   }
