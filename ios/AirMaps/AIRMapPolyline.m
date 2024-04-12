@@ -70,17 +70,18 @@
 
 - (void)setCoordinates:(NSArray<AIRMapCoordinate *> *)coordinates {
     _coordinates = coordinates;
-    CLLocationCoordinate2D coords[coordinates.count];
+    CLLocationCoordinate2D *coords = calloc(coordinates.count, sizeof(CLLocationCoordinate2D));
     for(int i = 0; i < coordinates.count; i++)
     {
         coords[i] = coordinates[i].coordinate;
     }
-
     if(_geodesic){
         self.polyline = [MKGeodesicPolyline polylineWithCoordinates:coords count:coordinates.count];
     } else {
         self.polyline = [MKPolyline polylineWithCoordinates:coords count:coordinates.count];
     }
+    free(coords);
+    
     self.renderer = [self createRenderer];
     [self update];
 }

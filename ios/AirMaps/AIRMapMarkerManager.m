@@ -25,8 +25,7 @@ RCT_EXPORT_MODULE()
 - (UIView *)view
 {
     AIRMapMarker *marker = [AIRMapMarker new];
-    // Here we are disabling the marker tap gesture recognizer since we detect it on "handleTap" method of "AIRMapManager".
-    //[marker addTapGestureRecognizer];
+    [marker addTapGestureRecognizer];
     marker.bridge = self.bridge;
     marker.isAccessibilityElement = YES;
     marker.accessibilityElementsHidden = NO;
@@ -45,10 +44,9 @@ RCT_REMAP_VIEW_PROPERTY(image, imageSrc, NSString)
 RCT_EXPORT_VIEW_PROPERTY(pinColor, UIColor)
 RCT_EXPORT_VIEW_PROPERTY(draggable, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(zIndex, NSInteger)
-RCT_EXPORT_VIEW_PROPERTY(top, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(opacity, double)
-RCT_EXPORT_VIEW_PROPERTY(rotation, double)
 RCT_EXPORT_VIEW_PROPERTY(isPreselected, BOOL)
+
 RCT_EXPORT_VIEW_PROPERTY(onPress, RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onSelect, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onDeselect, RCTDirectEventBlock)

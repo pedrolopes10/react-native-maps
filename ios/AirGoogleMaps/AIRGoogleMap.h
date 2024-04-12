@@ -22,7 +22,7 @@
 @property (nonatomic, assign) MKCoordinateRegion initialRegion;
 @property (nonatomic, assign) MKCoordinateRegion region;
 @property (nonatomic, assign) GMSCameraPosition *cameraProp;   // Because the base class already has a "camera" prop.
-@property (nonatomic, assign) GMSCameraPosition *initialCamera;
+@property (nonatomic, strong) GMSCameraPosition *initialCamera;
 @property (nonatomic, assign) NSString *customMapStyleString;
 @property (nonatomic, assign) UIEdgeInsets mapPadding;
 @property (nonatomic, assign) NSString *paddingAdjustmentBehaviorString;
@@ -34,6 +34,8 @@
 @property (nonatomic, copy) RCTBubblingEventBlock onPanDrag;
 @property (nonatomic, copy) RCTBubblingEventBlock onUserLocationChange;
 @property (nonatomic, copy) RCTBubblingEventBlock onMarkerPress;
+@property (nonatomic, copy) RCTBubblingEventBlock onMarkerSelect;
+@property (nonatomic, copy) RCTBubblingEventBlock onMarkerDeselect;
 @property (nonatomic, copy) RCTBubblingEventBlock onChange;
 @property (nonatomic, copy) RCTBubblingEventBlock onPoiClick;
 @property (nonatomic, copy) RCTDirectEventBlock onRegionChange;
@@ -79,7 +81,7 @@
 + (GMSCameraPosition*)makeGMSCameraPositionFromMap:(GMSMapView *)map andMKCoordinateRegion:(MKCoordinateRegion)region;
 
 - (NSDictionary*) getMarkersFramesWithOnlyVisible:(BOOL)onlyVisible;
-
+- (instancetype) initWithMapId:(NSString *) mapId;
 @end
 
 #endif

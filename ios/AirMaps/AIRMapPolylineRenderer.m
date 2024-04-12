@@ -39,7 +39,7 @@
 @end
 
 @implementation AIRMapPolylineRenderer {
-    MKGeodesicPolyline* _polyline;
+    MKPolyline* _polyline;
     NSArray<UIColor *> *_strokeColors;
     MKMapSnapshot* _snapshot;
     CLLocationCoordinate2D* _coordinates;
@@ -47,7 +47,7 @@
 
 @synthesize strokeColors;
 
-- (id)initWithOverlay:(id<MKOverlay>)overlay polyline:(MKGeodesicPolyline*)polyline
+- (id)initWithOverlay:(id<MKOverlay>)overlay polyline:(MKPolyline*)polyline
 {
     self = [super initWithOverlay:overlay];
     if (self){
@@ -57,7 +57,7 @@
     return self;
 }
 
-- (id)initWithSnapshot:(MKMapSnapshot*)snapshot overlay:(id<MKOverlay>)overlay polyline:(MKGeodesicPolyline*)polyline
+- (id)initWithSnapshot:(MKMapSnapshot*)snapshot overlay:(id<MKOverlay>)overlay polyline:(MKPolyline*)polyline
 {
     self = [super initWithOverlay:overlay];
     if (self){

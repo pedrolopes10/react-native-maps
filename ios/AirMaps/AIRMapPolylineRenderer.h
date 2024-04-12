@@ -10,8 +10,8 @@
 
 @interface AIRMapPolylineRenderer : MKOverlayPathRenderer
 
--(id)initWithOverlay:(id<MKOverlay>)overlay polyline:(MKGeodesicPolyline*)polyline;
--(id)initWithSnapshot:(MKMapSnapshot*)snapshot overlay:(id<MKOverlay>)overlay polyline:(MKGeodesicPolyline*)polyline;
+-(id)initWithOverlay:(id<MKOverlay>)overlay polyline:(MKPolyline*)polyline;
+-(id)initWithSnapshot:(MKMapSnapshot*)snapshot overlay:(id<MKOverlay>)overlay polyline:(MKPolyline*)polyline;
 -(void)drawWithZoomScale:(MKZoomScale)zoomScale inContext:(CGContextRef)context;
 
 @property (nonatomic, strong) NSArray<UIColor *> *strokeColors;

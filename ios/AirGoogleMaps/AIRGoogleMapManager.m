@@ -45,7 +45,12 @@ RCT_EXPORT_MODULE()
 
 - (UIView *)view
 {
-  AIRGoogleMap *map = [AIRGoogleMap new];
+  [GMSServices setMetalRendererEnabled:YES];
+  NSString* googleMapId  = nil;
+  if (self.initialProps && self.initialProps[@"googleMapId"]){
+    googleMapId  = self.initialProps[@"googleMapId"];
+  }
+  AIRGoogleMap *map = [[AIRGoogleMap alloc] initWithMapId:googleMapId];
   map.bridge = self.bridge;
   map.delegate = self;
   map.isAccessibilityElement = NO;
@@ -65,6 +70,7 @@ RCT_EXPORT_MODULE()
 
 RCT_EXPORT_VIEW_PROPERTY(isAccessibilityElement, BOOL)
 RCT_REMAP_VIEW_PROPERTY(testID, accessibilityIdentifier, NSString)
+RCT_EXPORT_VIEW_PROPERTY(googleMapId, NSString)
 RCT_EXPORT_VIEW_PROPERTY(initialCamera, GMSCameraPosition)
 RCT_REMAP_VIEW_PROPERTY(camera, cameraProp, GMSCameraPosition)
 RCT_EXPORT_VIEW_PROPERTY(initialRegion, MKCoordinateRegion)
@@ -95,6 +101,8 @@ RCT_EXPORT_VIEW_PROPERTY(onPanDrag, RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onUserLocationChange, RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onChange, RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onMarkerPress, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onMarkerSelect, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onMarkerDeselect, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onRegionChange, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onRegionChangeComplete, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onPoiClick, RCTDirectEventBlock)
@@ -146,8 +154,7 @@ RCT_EXPORT_METHOD(setCamera:(nonnull NSNumber *)reactTag
 
 RCT_EXPORT_METHOD(animateCamera:(nonnull NSNumber *)reactTag
                   withCamera:(id)json
-                  withDuration:(CGFloat)duration
-                  edgePadding:(NSDictionary *)edgePadding)
+                  withDuration:(CGFloat)duration)
 {
     [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
         id view = viewRegistry[reactTag];
@@ -162,29 +169,6 @@ RCT_EXPORT_METHOD(animateCamera:(nonnull NSNumber *)reactTag
             [CATransaction commit];
         }
     }];
-}
-
-RCT_EXPORT_METHOD(animateToNavigation:(nonnull NSNumber *)reactTag
-                  withRegion:(MKCoordinateRegion)region
-                  withBearing:(CGFloat)bearing
-                  withAngle:(double)angle
-                  withDuration:(CGFloat)duration)
-{
-  [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-    id view = viewRegistry[reactTag];
-    if (![view isKindOfClass:[AIRGoogleMap class]]) {
-      RCTLogError(@"Invalid view returned from registry, expecting AIRGoogleMap, got: %@", view);
-    } else {
-      [CATransaction begin];
-      [CATransaction setAnimationDuration:duration/1000];
-      AIRGoogleMap *mapView = (AIRGoogleMap *)view;
-      GMSCameraPosition *camera = [AIRGoogleMap makeGMSCameraPositionFromMap:mapView andMKCoordinateRegion:region];
-      [mapView animateToCameraPosition:camera];
-      [mapView animateToViewingAngle:angle];
-      [mapView animateToBearing:bearing];
-      [CATransaction commit];
-    }
-  }];
 }
 
 RCT_EXPORT_METHOD(animateToRegion:(nonnull NSNumber *)reactTag
@@ -203,130 +187,6 @@ RCT_EXPORT_METHOD(animateToRegion:(nonnull NSNumber *)reactTag
       AIRGoogleMap *mapView = (AIRGoogleMap *)view;
       GMSCameraPosition *camera = [AIRGoogleMap makeGMSCameraPositionFromMap:mapView andMKCoordinateRegion:region];
       [mapView animateToCameraPosition:camera];
-      [CATransaction commit];
-    }
-  }];
-}
-
-RCT_EXPORT_METHOD(animateToRegion:(nonnull NSNumber *)reactTag
-                  withRegion:(MKCoordinateRegion)region
-                  withDuration:(CGFloat)duration
-                  edgePadding:(NSDictionary *)edgePadding)
-{
-    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-        id view = viewRegistry[reactTag];
-        if (![view isKindOfClass:[AIRGoogleMap class]]) {
-            RCTLogError(@"Invalid view returned from registry, expecting AIRGoogleMap, got: %@", view);
-        } else {
-            // Core Animation must be used to control the animation's duration
-            // See http://stackoverflow.com/a/15663039/171744
-            NSTimeInterval timeInterval = duration/1000;    // seconds
-            AIRGoogleMap *mapView = (AIRGoogleMap *)view;
-            GMSCameraPosition *camera = [AIRGoogleMap makeGMSCameraPositionFromMap:mapView andMKCoordinateRegion:region];
-            
-            [CATransaction begin];
-            [CATransaction setAnimationDuration:timeInterval];
-            
-            if (edgePadding.count > 0) {
-                // Assuming that "edgePadding" values come in pixels from JS, so we convert them to points.
-                CGFloat devicePixelsPerPoint = UIScreen.mainScreen.scale;
-                CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]] / devicePixelsPerPoint;
-                CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]] / devicePixelsPerPoint;
-                CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]] / devicePixelsPerPoint;
-                CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]] / devicePixelsPerPoint;
-                
-                [view setPadding:UIEdgeInsetsMake(top, left, bottom, right)];
-            }
-            
-            [mapView animateToCameraPosition:camera];
-            [view setPadding:UIEdgeInsetsZero];
-            
-            [CATransaction commit];
-        }
-    }];
-}
-
-RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
-                  withRegion:(CLLocationCoordinate2D)latlng
-                  withDuration:(CGFloat)duration)
-{
-  [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-    id view = viewRegistry[reactTag];
-    if (![view isKindOfClass:[AIRGoogleMap class]]) {
-      RCTLogError(@"Invalid view returned from registry, expecting AIRGoogleMap, got: %@", view);
-    } else {
-      [CATransaction begin];
-      [CATransaction setAnimationDuration:duration/1000];
-      [(AIRGoogleMap *)view animateToLocation:latlng];
-      [CATransaction commit];
-    }
-  }];
-}
-
-RCT_EXPORT_METHOD(animateToCoordinate:(nonnull NSNumber *)reactTag
-                  withRegion:(CLLocationCoordinate2D)latlng
-                  withDuration:(CGFloat)duration
-                  edgePadding:(NSDictionary *)edgePadding)
-{
-    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-        id view = viewRegistry[reactTag];
-        if (![view isKindOfClass:[AIRGoogleMap class]]) {
-            RCTLogError(@"Invalid view returned from registry, expecting AIRGoogleMap, got: %@", view);
-        } else {
-            NSTimeInterval timeInterval = duration/1000;    // seconds
-            [CATransaction begin];
-            
-            if (edgePadding.count > 0) {
-                // Assuming that "edgePadding" values come in pixels from JS, so we convert them to points.
-                CGFloat devicePixelsPerPoint = UIScreen.mainScreen.scale;
-                CGFloat top = [RCTConvert CGFloat:edgePadding[@"top"]] / devicePixelsPerPoint;
-                CGFloat right = [RCTConvert CGFloat:edgePadding[@"right"]] / devicePixelsPerPoint;
-                CGFloat bottom = [RCTConvert CGFloat:edgePadding[@"bottom"]] / devicePixelsPerPoint;
-                CGFloat left = [RCTConvert CGFloat:edgePadding[@"left"]] / devicePixelsPerPoint;
-                
-                [view setPadding:UIEdgeInsetsMake(top, left, bottom, right)];
-            }
-            
-            [CATransaction setAnimationDuration:timeInterval];
-            [(AIRGoogleMap *)view animateToLocation:latlng];
-            [view setPadding:UIEdgeInsetsZero];
-            
-            [CATransaction commit];
-        }
-    }];
-}
-
-RCT_EXPORT_METHOD(animateToViewingAngle:(nonnull NSNumber *)reactTag
-                  withAngle:(double)angle
-                  withDuration:(CGFloat)duration)
-{
-  [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-    id view = viewRegistry[reactTag];
-    if (![view isKindOfClass:[AIRGoogleMap class]]) {
-      RCTLogError(@"Invalid view returned from registry, expecting AIRGoogleMap, got: %@", view);
-    } else {
-      [CATransaction begin];
-      [CATransaction setAnimationDuration:duration/1000];
-      AIRGoogleMap *mapView = (AIRGoogleMap *)view;
-      [mapView animateToViewingAngle:angle];
-      [CATransaction commit];
-    }
-  }];
-}
-
-RCT_EXPORT_METHOD(animateToBearing:(nonnull NSNumber *)reactTag
-                  withBearing:(CGFloat)bearing
-                  withDuration:(CGFloat)duration)
-{
-  [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-    id view = viewRegistry[reactTag];
-    if (![view isKindOfClass:[AIRGoogleMap class]]) {
-      RCTLogError(@"Invalid view returned from registry, expecting AIRGoogleMap, got: %@", view);
-    } else {
-      [CATransaction begin];
-      [CATransaction setAnimationDuration:duration/1000];
-      AIRGoogleMap *mapView = (AIRGoogleMap *)view;
-      [mapView animateToBearing:bearing];
       [CATransaction commit];
     }
   }];
@@ -369,33 +229,6 @@ RCT_EXPORT_METHOD(fitToElements:(nonnull NSNumber *)reactTag
       }
     }
   }];
-}
-
-RCT_EXPORT_METHOD(fitToElements:(nonnull NSNumber *)reactTag
-                  animated:(BOOL)animated
-                  withDuration:(CGFloat)duration)
-{
-    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-        id view = viewRegistry[reactTag];
-        if (![view isKindOfClass:[AIRGoogleMap class]]) {
-            RCTLogError(@"Invalid view returned from registry, expecting AIRGoogleMap, got: %@", view);
-        } else {
-            NSTimeInterval timeInterval = duration/1000;    // seconds
-            AIRGoogleMap *mapView = (AIRGoogleMap *)view;
-            CLLocationCoordinate2D myLocation = ((AIRGoogleMapMarker *)(mapView.markers.firstObject)).realMarker.position;
-            GMSCoordinateBounds *bounds = [[GMSCoordinateBounds alloc] initWithCoordinate:myLocation coordinate:myLocation];
-
-            [CATransaction begin];
-            [CATransaction setAnimationDuration:timeInterval];
-            
-            for (AIRGoogleMapMarker *marker in mapView.markers) {
-                bounds = [bounds includingCoordinate:marker.realMarker.position];
-            }
-            
-            [mapView animateWithCameraUpdate:[GMSCameraUpdate fitBounds:bounds withPadding:55.0f]];
-            [CATransaction commit];
-        }
-    }];
 }
 
 RCT_EXPORT_METHOD(fitToSuppliedMarkers:(nonnull NSNumber *)reactTag
@@ -517,25 +350,6 @@ RCT_EXPORT_METHOD(takeSnapshot:(nonnull NSNumber *)reactTag
         else if ([result isEqualToString:@"base64"]) {
             callback(@[[NSNull null], [data base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithCarriageReturn]]);
         }
-        else if ([result isEqualToString:@"legacy"]) {
-
-            // In the initial (iOS only) implementation of takeSnapshot,
-            // both the uri and the base64 encoded string were returned.
-            // Returning both is rarely useful and in fact causes a
-            // performance penalty when only the file URI is desired.
-            // In that case the base64 encoded string was always marshalled
-            // over the JS-bridge (which is quite slow).
-            // A new more flexible API was created to cover this.
-            // This code should be removed in a future release when the
-            // old API is fully deprecated.
-            [data writeToFile:filePath atomically:YES];
-            NSDictionary *snapshotData = @{
-                                           @"uri": filePath,
-                                           @"data": [data base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithCarriageReturn]
-                                           };
-            callback(@[[NSNull null], snapshotData]);
-        }
-
     }
     UIGraphicsEndImageContext();
   }];
@@ -551,14 +365,14 @@ RCT_EXPORT_METHOD(pointForCoordinate:(nonnull NSNumber *)reactTag
                              [coordinate[@"latitude"] doubleValue],
                              [coordinate[@"longitude"] doubleValue]
                              );
-  
+
   [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
     id view = viewRegistry[reactTag];
     if (![view isKindOfClass:[AIRGoogleMap class]]) {
       RCTLogError(@"Invalid view returned from registry, expecting AIRMap, got: %@", view);
     } else {
       AIRGoogleMap *mapView = (AIRGoogleMap *)view;
-      
+
       CGPoint touchPoint = [mapView.projection pointForCoordinate:coord];
 
       resolve(@{
@@ -578,14 +392,14 @@ RCT_EXPORT_METHOD(coordinateForPoint:(nonnull NSNumber *)reactTag
                            [point[@"x"] doubleValue],
                            [point[@"y"] doubleValue]
                            );
-  
+
   [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
     id view = viewRegistry[reactTag];
     if (![view isKindOfClass:[AIRGoogleMap class]]) {
       RCTLogError(@"Invalid view returned from registry, expecting AIRMap, got: %@", view);
     } else {
       AIRGoogleMap *mapView = (AIRGoogleMap *)view;
-      
+
       CLLocationCoordinate2D coordinate = [mapView.projection coordinateForPoint:pt];
 
       resolve(@{
@@ -780,6 +594,7 @@ RCT_EXPORT_METHOD(setIndoorActiveLevelIndex:(nonnull NSNumber *)reactTag
                       @"x": @(touchPoint.x),
                       @"y": @(touchPoint.y),
                       },
+                   @"numberOfTouches": @(recognizer.numberOfTouches),
                   });
 
 }
