@@ -21,6 +21,7 @@ interface NativeCommands {
       React.RefObject<MapViewNativeComponentType>['current']
     >,
     camera: Partial<Camera>,
+    edgePadding: EdgePadding,
   ) => void;
 
   animateCamera: (
@@ -38,6 +39,7 @@ interface NativeCommands {
     >,
     edgePadding: EdgePadding,
     animated: boolean,
+    duration: number,
   ) => void;
 
   fitToSuppliedMarkers: (

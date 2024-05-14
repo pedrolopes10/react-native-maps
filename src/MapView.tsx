@@ -792,9 +792,12 @@ class MapView extends React.Component<MapViewProps, State> {
     return Promise.reject('getCamera not supported on this platform');
   }
 
-  setCamera(camera: Partial<Camera>) {
+  setCamera(camera: Partial<Camera>, options: FitToOptions = {}) {
     if (this.map.current) {
-      Commands.setCamera(this.map.current, camera);
+      const {
+        edgePadding = {top: 0, right: 0, bottom: 0, left: 0},
+      } = options;
+      Commands.setCamera(this.map.current, camera, edgePadding);
     }
   }
 
@@ -827,9 +830,10 @@ class MapView extends React.Component<MapViewProps, State> {
       const {
         edgePadding = {top: 0, right: 0, bottom: 0, left: 0},
         animated = true,
+        duration = 500,
       } = options;
 
-      Commands.fitToElements(this.map.current, edgePadding, animated);
+      Commands.fitToElements(this.map.current, edgePadding, animated, duration);
     }
   }
 
