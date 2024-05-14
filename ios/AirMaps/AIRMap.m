@@ -47,7 +47,7 @@ const NSInteger AIRMapMaxZoomLevel = 20;
 @implementation AIRMap
 {
     UIView *_legalLabel;
-        BOOL _initialRegionSet;
+    BOOL _initialRegionSet;
     BOOL _initialCameraSet;
 
     // Array to manually track RN subviews
@@ -86,7 +86,7 @@ const NSInteger AIRMapMaxZoomLevel = 20;
         self.minZoomLevel = 0;
         self.maxZoomLevel = AIRMapMaxZoomLevel;
         self.compassOffset = CGPointMake(0, 0);
-self.legacyZoomConstraintsEnabled = YES;
+        self.legacyZoomConstraintsEnabled = YES;
     }
     return self;
 }
@@ -313,7 +313,7 @@ self.legacyZoomConstraintsEnabled = YES;
 - (void)setShowsUserLocation:(BOOL)showsUserLocation
 {
     if (self.showsUserLocation != showsUserLocation) {
-                super.showsUserLocation = showsUserLocation;
+        super.showsUserLocation = showsUserLocation;
     }
 }
 

@@ -328,23 +328,22 @@ public class MapMarkerManager extends ViewGroupManager<MapMarker> {
   @Override
   @Nullable
   public Map getExportedCustomDirectEventTypeConstants() {
-    Map<String, Map<String, String>> map = MapBuilder.of(
-        "onPress", MapBuilder.of("registrationName", "onPress"),
-        "onCalloutPress", MapBuilder.of("registrationName", "onCalloutPress"),
-        "onDragStart", MapBuilder.of("registrationName", "onDragStart"),
-        "onDrag", MapBuilder.of("registrationName", "onDrag"),
-        "onDragEnd", MapBuilder.of("registrationName", "onDragEnd"),
-        "onSelect", MapBuilder.of("registrationName", "onSelect"),
-        "onDeselect", MapBuilder.of("registrationName", "onDeselect")
-    );
+      return MapBuilder.<String, Map<String, String>>builder()
+              .put("onPress", MapBuilder.of("registrationName", "onPress"))
+              .put("onCalloutPress", MapBuilder.of("registrationName", "onCalloutPress"))
+              .put("onDragStart", MapBuilder.of("registrationName", "onDragStart"))
+              .put("onDrag", MapBuilder.of("registrationName", "onDrag"))
+              .put("onDragEnd", MapBuilder.of("registrationName", "onDragEnd"))
+              .build();
+  }
 
-    map.putAll(MapBuilder.of(
-        "onDragStart", MapBuilder.of("registrationName", "onDragStart"),
-        "onDrag", MapBuilder.of("registrationName", "onDrag"),
-        "onDragEnd", MapBuilder.of("registrationName", "onDragEnd")
-    ));
-
-    return map;
+  @Override
+  @Nullable
+  public Map getExportedCustomBubblingEventTypeConstants() {
+      return MapBuilder.<String, Map<String, Object>>builder()
+              .put("onSelect", MapBuilder.of("phasedRegistrationNames", MapBuilder.of("bubbled", "onSelect")))
+              .put("onDeselect", MapBuilder.of("phasedRegistrationNames", MapBuilder.of("bubbled", "onDeselect")))
+              .build();
   }
 
   @Override

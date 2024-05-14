@@ -67,13 +67,13 @@ id regionAsJSON(MKCoordinateRegion region) {
   BOOL _didLayoutSubviews;
   BOOL _didPrepareMap;
   BOOL _didCallOnMapReady;
-    BOOL _zoomTapEnabled;
-NSString* _googleMapId;
+  BOOL _zoomTapEnabled;
+  NSString* _googleMapId;
 }
 
 - (instancetype)initWithMapId:(NSString *)mapId
 {
-  if (mapId){
+    if (mapId){
         GMSMapID *mapID = [GMSMapID mapIDWithIdentifier:mapId];
         GMSCameraPosition *camera = [GMSCameraPosition cameraWithLatitude:47.0169
                                                                 longitude:-122.336471
@@ -100,7 +100,7 @@ NSString* _googleMapId;
     _didLayoutSubviews = false;
     _didPrepareMap = false;
     _didCallOnMapReady = false;
-        _zoomTapEnabled = YES;
+    _zoomTapEnabled = YES;
 
     // Listen to the myLocation property of GMSMapView.
     [self addObserver:self
@@ -297,7 +297,7 @@ NSString* _googleMapId;
 }
 
 - (void)setInitialRegion:(MKCoordinateRegion)initialRegion {
-    _initialRegion = initialRegion;
+  _initialRegion = initialRegion;
   if(!_initialRegionSet && _didLayoutSubviews){
     self.camera = [AIRGoogleMap makeGMSCameraPositionFromMap:self andMKCoordinateRegion:initialRegion];
     _initialRegionSet = true;

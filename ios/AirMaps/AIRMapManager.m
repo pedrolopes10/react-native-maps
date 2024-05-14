@@ -28,8 +28,6 @@
 #import "AIRMapSnapshot.h"
 #import "RCTConvert+AirMap.h"
 #import "AIRMapOverlay.h"
-#import "AIRWeakTimerReference.h"
-#import "AIRWeakMapReference.h"
 #import <MapKit/MapKit.h>
 
 #define IS_OS_11_OR_LATER ([[[UIDevice currentDevice] systemVersion] floatValue] >= 11.0)
@@ -766,7 +764,7 @@ RCT_EXPORT_METHOD(getAddressFromCoordinates:(nonnull NSNumber *)reactTag
                       else if ([result isEqualToString:@"base64"]) {
                           callback(@[[NSNull null], [data base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithCarriageReturn]]);
                       }
-                                        }
+                  }
                   UIGraphicsEndImageContext();
               }];
 }
@@ -874,7 +872,7 @@ RCT_EXPORT_METHOD(getAddressFromCoordinates:(nonnull NSNumber *)reactTag
     }
 
     if (nearestDistance <= maxMeters) {
-                id event = @{
+        id event = @{
                    @"action": @"polyline-press",
                    @"coordinate": @{
                        @"latitude": @(tapCoordinate.latitude),
@@ -1104,12 +1102,12 @@ static int kDragCenterContext;
 
 - (void)mapViewDidChangeVisibleRegion:(AIRMap *)mapView
 {
-            [self _regionChanged:mapView];
-    }
+    [self _regionChanged:mapView];
+}
 
 - (void)mapView:(AIRMap *)mapView regionDidChangeAnimated:(__unused BOOL)animated
 {
-        // Don't send region did change events until map has
+    // Don't send region did change events until map has
     // started rendering, as these won't represent the final location
     if(mapView.hasStartedRendering){
         [self _regionChanged:mapView];
@@ -1136,7 +1134,7 @@ static int kDragCenterContext;
       mapView.hasStartedRendering = YES;
     }
     [mapView beginLoading];
-    }
+}
 
 - (void)mapViewDidFinishRenderingMap:(AIRMap *)mapView fullyRendered:(BOOL)fullyRendered
 {

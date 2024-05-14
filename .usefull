@@ -1,2 +1,3 @@
 - Before committing a new release version, build to update the lib directory
+- Also to test any changes you need to build the lib directory
 npm run build

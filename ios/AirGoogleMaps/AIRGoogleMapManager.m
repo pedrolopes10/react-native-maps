@@ -168,8 +168,8 @@ RCT_EXPORT_METHOD(animateCamera:(nonnull NSNumber *)reactTag
             GMSCameraPosition *camera = [RCTConvert GMSCameraPositionWithDefaults:json existingCamera:[mapView camera]];
             [mapView animateToCameraPosition:camera];
             [CATransaction commit];
-    }
-  }];
+        }
+    }];
 }
 
 RCT_EXPORT_METHOD(animateToRegion:(nonnull NSNumber *)reactTag

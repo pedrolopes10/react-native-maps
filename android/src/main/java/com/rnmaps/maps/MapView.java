@@ -108,7 +108,6 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
   private ReadableMap camera;
   private String customMapStyleString;
   private boolean initialRegionSet = false;
-  private boolean initialCameraSet = false;
   private LatLngBounds cameraLastIdleBounds;
   private int cameraMoveReason = 0;
   private MapMarker selectedMarker;
@@ -248,14 +247,9 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
     groundOverlayManager = new GroundOverlayManager(map);
     groundOverlayCollection = groundOverlayManager.newCollection();
 
-    this.map.setInfoWindowAdapter(this);
+    markerCollection.setInfoWindowAdapter(this);
 
     applyBridgedProps();
-
-    if(initialRegion != null) {
-      setRegion(initialRegion);
-      initialRegionSet = true;
-    }
 
     manager.pushEvent(context, this, "onMapReady", new WritableNativeMap());
 
@@ -274,9 +268,7 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
         coordinate.putDouble("accuracy", location.getAccuracy());
         coordinate.putDouble("speed", location.getSpeed());
         coordinate.putDouble("heading", location.getBearing());
-        if(android.os.Build.VERSION.SDK_INT >= 18){
-          coordinate.putBoolean("isFromMockProvider", location.isFromMockProvider());
-        }
+        coordinate.putBoolean("isFromMockProvider", location.isFromMockProvider());
 
         event.putMap("coordinate", coordinate);
 
@@ -294,7 +286,6 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
         }
 
         WritableMap event = makeClickEventData(marker.getPosition());
-        event = makeClickEventData(marker.getPosition());
         event.putString("action", "marker-press");
         event.putString("id", airMapMarker.getIdentifier());
         manager.pushEvent(context, view, "onMarkerPress", event);
@@ -563,13 +554,6 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
     }
   }
 
-  public void setInitialCamera(ReadableMap initialCamera) {
-    if (!initialCameraSet && initialCamera != null) {
-      setCamera(initialCamera);
-      initialCameraSet = true;
-    }
-  }
-
   private void moveToRegion(ReadableMap region) {
     if (region == null) return;
 
@@ -578,8 +562,8 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
     double lngDelta = region.getDouble("longitudeDelta");
     double latDelta = region.getDouble("latitudeDelta");
     LatLngBounds bounds = new LatLngBounds(
-        new LatLng(lat - latDelta / 2, lng - lngDelta / 2), // southwest
-        new LatLng(lat + latDelta / 2, lng + lngDelta / 2)  // northeast
+            new LatLng(lat - latDelta / 2, lng - lngDelta / 2), // southwest
+            new LatLng(lat + latDelta / 2, lng + lngDelta / 2)  // northeast
     );
     if (super.getHeight() <= 0 || super.getWidth() <= 0) {
       // in this case, our map has not been laid out yet, so we save the bounds in a local
@@ -627,7 +611,7 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
   }
 
   public static CameraPosition cameraPositionFromMap(ReadableMap camera){
-  if (camera == null) return null;
+    if (camera == null) return null;
 
     CameraPosition.Builder builder = new CameraPosition.Builder();
 
@@ -643,7 +627,8 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
     builder.zoom((float)camera.getDouble("zoom"));
 
     return builder.build();
-}
+  }
+
   public void moveToCamera(ReadableMap cameraMap) {
     CameraPosition camera = cameraPositionFromMap(cameraMap);
     if (camera == null) return;
@@ -850,7 +835,7 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
       attacherGroup.removeView(feature);
     } else if (feature instanceof MapHeatmap) {
       heatmapMap.remove(feature.getFeature());
-    feature.removeFromMap(map);
+      feature.removeFromMap(map);
     } else if(feature instanceof MapCircle) {
       feature.removeFromMap(circleCollection);
     } else if(feature instanceof MapOverlay) {
@@ -860,8 +845,8 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
     } else if(feature instanceof  MapPolyline) {
       feature.removeFromMap(polylineCollection);
     } else {
-    feature.removeFromMap(map);
-}
+      feature.removeFromMap(map);
+    }
   }
 
   public WritableMap makeClickEventData(LatLng point) {

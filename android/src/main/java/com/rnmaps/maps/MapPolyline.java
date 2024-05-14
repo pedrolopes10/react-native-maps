@@ -21,6 +21,7 @@ import java.util.List;
 
 public class MapPolyline extends MapFeature {
 
+  private PolylineManager.Collection polylineCollection;
   private List<Polyline> polylineArray;
   private List<PolylineOptions> polylineOptions;
   private Polyline polyline;
@@ -61,13 +62,9 @@ public class MapPolyline extends MapFeature {
 
     if (polyline != null && (type.equals("fake") || type.equals("single"))) {
       polyline.setPoints(this.coordinates);
-      // don't know how to create a polyline without access to PolylineManager.Collection
-      // this.map does not exist any longer
-      // polylines are now added through the collection on MapView.java
-      // also could not fine uses of this method (setSyncedCoordsColors)
-    // } else if (polyline != null && type.equals("actual")){
-    //   removeFromMap(this.map);
-    //   createPolyline();
+    } else if (polyline != null && type.equals("actual")){
+      removeFromMap(this.polylineCollection);
+      addToMap(this.polylineCollection);
     }
   }
 
@@ -134,11 +131,11 @@ public class MapPolyline extends MapFeature {
 
   @Override
   public void addToMap(Object collection) {
-    PolylineManager.Collection polylineCollection = (PolylineManager.Collection) collection;
+    this.polylineCollection = (PolylineManager.Collection) collection;
     createPolyline();
     this.polylineArray = new ArrayList<>(this.polylineOptions.size());
     for (int i = 0; i < this.polylineOptions.size(); i++) {
-      Polyline segment = polylineCollection.addPolyline(this.polylineOptions.get(i));
+      Polyline segment = this.polylineCollection.addPolyline(this.polylineOptions.get(i));
       segment.setClickable(false);
       polyline = segment;
       this.polylineArray.add(i, segment);
