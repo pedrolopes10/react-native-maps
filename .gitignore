@@ -63,7 +63,8 @@ yarn-error.log
 .history
 
 # ts outDir
-lib/
+### lib/
+### ## lib is required on node_modules of the user project, don't know why it was gitignored
 
 example/vendor/bundle/
 
