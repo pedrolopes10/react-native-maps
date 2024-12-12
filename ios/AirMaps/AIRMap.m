@@ -132,7 +132,7 @@ const NSInteger AIRMapMaxZoomLevel = 20;
     } else {
         NSArray<id<RCTComponent>> *childSubviews = [subview reactSubviews];
         for (int i = 0; i < childSubviews.count; i++) {
-          [self insertReactSubview:(UIView *)childSubviews[i] atIndex:atIndex];
+            [self insertReactSubview:(UIView *)childSubviews[i] atIndex:atIndex];
         }
     }
     [_reactSubviews insertObject:(UIView *)subview atIndex:(NSUInteger) atIndex];
@@ -163,7 +163,7 @@ const NSInteger AIRMapMaxZoomLevel = 20;
     } else {
         NSArray<id<RCTComponent>> *childSubviews = [subview reactSubviews];
         for (int i = 0; i < childSubviews.count; i++) {
-          [self removeReactSubview:(UIView *)childSubviews[i]];
+            [self removeReactSubview:(UIView *)childSubviews[i]];
         }
     }
     [_reactSubviews removeObject:(UIView *)subview];
@@ -173,7 +173,7 @@ const NSInteger AIRMapMaxZoomLevel = 20;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wobjc-missing-super-calls"
 - (NSArray<id<RCTComponent>> *)reactSubviews {
-  return _reactSubviews;
+    return _reactSubviews;
 }
 #pragma clang diagnostic pop
 
@@ -212,15 +212,15 @@ const NSInteger AIRMapMaxZoomLevel = 20;
         CGRect frame = [self frameForMarker:mrkAnn];
         CGPoint point = [self convertCoordinate:mrkAnn.coordinate toPointToView:self];
         NSDictionary* frameDict = @{
-                                    @"x": @(frame.origin.x),
-                                    @"y": @(frame.origin.y),
-                                    @"width": @(frame.size.width),
-                                    @"height": @(frame.size.height)
-                                    };
+            @"x": @(frame.origin.x),
+            @"y": @(frame.origin.y),
+            @"width": @(frame.size.width),
+            @"height": @(frame.size.height)
+        };
         NSDictionary* pointDict = @{
-                                   @"x": @(point.x),
-                                   @"y": @(point.y)
-                                  };
+            @"x": @(point.x),
+            @"y": @(point.y)
+        };
         NSString* k = mrkAnn.identifier;
         BOOL isVisible = CGRectIntersectsRect(self.bounds, frame);
         if (k != nil && (!onlyVisible || isVisible)) {
@@ -258,8 +258,39 @@ const NSInteger AIRMapMaxZoomLevel = 20;
 // See this for some discussion of why we need to override this: https://github.com/nfarina/calloutview/pull/9
 - (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
 
-    UIView *calloutMaybe = [self.calloutView hitTest:[self.calloutView convertPoint:point fromView:self] withEvent:event];
-    if (calloutMaybe) return calloutMaybe;
+    CGPoint touchPoint = [self.calloutView convertPoint:point fromView:self];
+    UIView *touchedView = [self.calloutView hitTest:touchPoint withEvent:event];
+
+    if (touchedView) {
+        UIWindow* win = [[[UIApplication sharedApplication] windows] firstObject];
+        AIRMapCalloutSubview* calloutSubview = nil;
+        AIRMapCallout* callout = nil;
+        AIRMapMarker* marker = nil;
+
+        UIView* tmp = touchedView;
+        while (tmp && tmp != win && tmp != self.calloutView) {
+            if ([tmp respondsToSelector:@selector(onPress)]) {
+                calloutSubview = (AIRMapCalloutSubview*) tmp;
+            }
+            if ([tmp isKindOfClass:[AIRMapCallout class]]) {
+                callout = (AIRMapCallout*) tmp;
+                break;
+            }
+            tmp = tmp.superview;
+        }
+
+        if (callout) {
+            marker = [self markerForCallout:callout];
+            if (marker) {
+                CGPoint touchPointReal = [marker.calloutView convertPoint:point fromView:self];
+                if (![callout isPointInside:touchPointReal]) {
+                    return [super hitTest:point withEvent:event];
+                }
+            }
+        }
+
+        return calloutSubview ? calloutSubview : touchedView;
+    }
 
     return [super hitTest:point withEvent:event];
 }
@@ -439,40 +470,39 @@ const NSInteger AIRMapMaxZoomLevel = 20;
 }
 
 - (void)setCameraZoomRange:(NSDictionary *)cameraZoomRange {
-    if (!@available(iOS 13.0, *)) {
-        return;
+    if (@available(iOS 13.0, *)) {
+
+        if (cameraZoomRange == nil) {
+            cameraZoomRange = @{};
+        }
+
+        NSNumber *minValue = cameraZoomRange[@"minCenterCoordinateDistance"];
+        NSNumber *maxValue = cameraZoomRange[@"maxCenterCoordinateDistance"];
+
+        if (minValue == nil && maxValue == nil) {
+            self.legacyZoomConstraintsEnabled = YES;
+
+            MKMapCameraZoomRange *defaultZoomRange = [[MKMapCameraZoomRange alloc] initWithMinCenterCoordinateDistance:MKMapCameraZoomDefault maxCenterCoordinateDistance:MKMapCameraZoomDefault];
+            [super setCameraZoomRange:defaultZoomRange animated:NO];
+
+            return;
+        }
+
+        MKMapCameraZoomRange *zoomRange = nil;
+
+        if (minValue != nil && maxValue != nil) {
+            zoomRange = [[MKMapCameraZoomRange alloc] initWithMinCenterCoordinateDistance:[minValue doubleValue] maxCenterCoordinateDistance:[maxValue doubleValue]];
+        } else if (minValue != nil) {
+            zoomRange = [[MKMapCameraZoomRange alloc] initWithMinCenterCoordinateDistance:[minValue doubleValue]];
+        } else if (maxValue != nil) {
+            zoomRange = [[MKMapCameraZoomRange alloc] initWithMaxCenterCoordinateDistance:[maxValue doubleValue]];
+        }
+
+        BOOL animated = [cameraZoomRange[@"animated"] boolValue];
+
+        self.legacyZoomConstraintsEnabled = NO;
+        [super setCameraZoomRange:zoomRange animated:animated];
     }
-
-    if (cameraZoomRange == nil) {
-        cameraZoomRange = @{};
-    }
-
-    NSNumber *minValue = cameraZoomRange[@"minCenterCoordinateDistance"];
-    NSNumber *maxValue = cameraZoomRange[@"maxCenterCoordinateDistance"];
-
-    if (minValue == nil && maxValue == nil) {
-        self.legacyZoomConstraintsEnabled = YES;
-
-        MKMapCameraZoomRange *defaultZoomRange = [[MKMapCameraZoomRange alloc] initWithMinCenterCoordinateDistance:MKMapCameraZoomDefault maxCenterCoordinateDistance:MKMapCameraZoomDefault];
-        [super setCameraZoomRange:defaultZoomRange animated:NO];
-
-        return;
-    }
-
-    MKMapCameraZoomRange *zoomRange = nil;
-
-    if (minValue != nil && maxValue != nil) {
-        zoomRange = [[MKMapCameraZoomRange alloc] initWithMinCenterCoordinateDistance:[minValue doubleValue] maxCenterCoordinateDistance:[maxValue doubleValue]];
-    } else if (minValue != nil) {
-        zoomRange = [[MKMapCameraZoomRange alloc] initWithMinCenterCoordinateDistance:[minValue doubleValue]];
-    } else if (maxValue != nil) {
-        zoomRange = [[MKMapCameraZoomRange alloc] initWithMaxCenterCoordinateDistance:[maxValue doubleValue]];
-    }
-
-    BOOL animated = [cameraZoomRange[@"animated"] boolValue];
-
-    self.legacyZoomConstraintsEnabled = NO;
-    [super setCameraZoomRange:zoomRange animated:animated];
 }
 
 // Include properties of MKMapView which are only available on iOS 9+
@@ -608,16 +638,16 @@ const NSInteger AIRMapMaxZoomLevel = 20;
 
 
 - (void)setLegalLabelInsets:(UIEdgeInsets)legalLabelInsets {
-  _legalLabelInsets = legalLabelInsets;
-  [self updateLegalLabelInsets];
+    _legalLabelInsets = legalLabelInsets;
+    [self updateLegalLabelInsets];
 }
 
 - (void)setMapPadding:(UIEdgeInsets)mapPadding {
-  self.layoutMargins = mapPadding;
+    self.layoutMargins = mapPadding;
 }
 
 - (UIEdgeInsets)mapPadding {
-  return self.layoutMargins;
+    return self.layoutMargins;
 }
 
 - (void)beginLoading {
@@ -686,7 +716,7 @@ const NSInteger AIRMapMaxZoomLevel = 20;
             break;
         }
     }
-    
+
     if (self.defaultCompassButton == nil) {
         for (UIView *subview in self.subviews) {
             if (![NSStringFromClass(subview.class) isEqualToString:@"MKPassThroughStackView"]) continue;
@@ -698,7 +728,7 @@ const NSInteger AIRMapMaxZoomLevel = 20;
             break;
         }
     }
-    
+
 }
 
 // based on https://medium.com/@dmytrobabych/getting-actual-rotation-and-zoom-level-for-mapkit-mkmapview-e7f03f430aa9
