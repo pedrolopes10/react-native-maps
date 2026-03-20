@@ -300,12 +300,6 @@ public class MarkerManager extends ViewGroupManager<MapMarker> implements RNMaps
         }
     }
 
-    @Override
-    public void onDropViewInstance(MapMarker view) {
-        view.doDestroy();
-        super.onDropViewInstance(view);
-    }
-
     // ANSY
     @Override
     public void setRotation(MapMarker view, double value) {
