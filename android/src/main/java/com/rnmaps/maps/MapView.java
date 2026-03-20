@@ -88,7 +88,7 @@ import java.util.concurrent.ExecutionException;
 import com.rnmaps.fabric.event.*;
 
 public class MapView extends com.google.android.gms.maps.MapView implements GoogleMap.InfoWindowAdapter,
-        GoogleMap.OnMarkerDragListener, OnMapReadyCallback, GoogleMap.OnPoiClickListener, GoogleMap.OnIndoorStateChangeListener, DefaultLifecycleObserver {
+        OnMapReadyCallback, DefaultLifecycleObserver {
     public GoogleMap map;
     private Bundle savedMapState;
     private ArrayList<MapFeature> savedFeatures = null;
@@ -221,6 +221,7 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
             //noinspection MissingPermission
             map.setMyLocationEnabled(showUserLocation);
             map.setLocationSource(fusedLocationSource);
+            map.getUiSettings().setMyLocationButtonEnabled(hasPermissions() && showMyLocationButton);
         }
         synchronized (MapView.this) {
             if (!destroyed) {
@@ -235,6 +236,7 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
         if (hasPermissions() && map != null) {
             //noinspection MissingPermission
             map.setMyLocationEnabled(false);
+            map.getUiSettings().setMyLocationButtonEnabled(false);
         }
         synchronized (MapView.this) {
             if (!paused) {
