@@ -60,6 +60,7 @@ import com.rnmaps.fabric.event.OnDragStartEvent;
 import com.rnmaps.fabric.event.OnPressEvent;
 import com.rnmaps.fabric.event.OnSelectEvent;
 
+import java.lang.ref.SoftReference;
 import java.lang.reflect.Method;
 import java.util.Map;
 
@@ -107,10 +108,13 @@ public class MapMarker extends MapFeature {
     private String imageUri;
     private boolean loadingImage;
 
+    private SoftReference<MarkerManager.Collection> markerCollectionRef;
+
+
+
     private final DraweeHolder<?> logoHolder;
     private ImageManager.OnImageLoadedListener imageLoadedListener;
     private DataSource<CloseableReference<CloseableImage>> dataSource;
-    private MarkerManager.Collection markerCollection;
     private final ControllerListener<ImageInfo> mLogoControllerListener =
             new BaseControllerListener<ImageInfo>() {
                 @Override
@@ -210,6 +214,16 @@ public class MapMarker extends MapFeature {
         update(false);
     }
 
+    public void doDestroy() {
+        MarkerManager.Collection collection = markerCollectionRef != null
+                ? markerCollectionRef.get()
+                : null;
+
+        if (collection != null) {
+            this.removeFromMap(collection);
+        }
+        markerCollectionRef = null;
+    }
     public String getIdentifier() {
         return this.identifier;
     }
@@ -554,12 +568,8 @@ public class MapMarker extends MapFeature {
     public void addToMap(Object collection) {
         MarkerManager.Collection markerCollection = (MarkerManager.Collection) collection;
         marker = markerCollection.addMarker(getMarkerOptions());
-        this.markerCollection = markerCollection;
+        this.markerCollectionRef = new SoftReference<>(markerCollection);
         updateTracksViewChanges();
-    }
-
-    public void doDestroy() {
-        this.removeFromMap(this.markerCollection);
     }
 
     @Override
@@ -661,7 +671,6 @@ public class MapMarker extends MapFeature {
     private Bitmap createDrawable() {
         int width = this.width <= 0 ? 100 : this.width;
         int height = this.height <= 0 ? 100 : this.height;
-        this.buildDrawingCache();
 
         // Do not create the doublebuffer-bitmap each time. reuse it to save memory.
         Bitmap bitmap = mLastBitmapCreated;
