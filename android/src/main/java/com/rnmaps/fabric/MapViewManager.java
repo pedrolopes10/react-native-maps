@@ -206,10 +206,6 @@ public class MapViewManager extends ViewGroupManager<MapView> implements RNMapsM
     }
 
     @Override
-    public void setCamera(MapView view, @Nullable ReadableMap value) {
-        view.setCamera(value);
-    }
-
     public void setCamera(MapView view, @Nullable ReadableMap value, @Nullable ReadableMap edgePadding) {
         view.setCamera(value, edgePadding);
     }
