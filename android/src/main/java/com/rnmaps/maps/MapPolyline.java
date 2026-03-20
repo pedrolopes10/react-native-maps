@@ -23,6 +23,7 @@ import com.google.android.gms.maps.model.StyleSpan;
 import com.google.maps.android.collections.PolylineManager;
 import com.rnmaps.fabric.event.OnPressEvent;
 
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -47,7 +48,7 @@ public class MapPolyline extends MapFeature {
     private ReadableArray patternValues;
     private List<PatternItem> pattern;
 
-    private PolylineManager.Collection polylineCollection;
+    private SoftReference<PolylineManager.Collection> polylineCollectionRef;
 
     public MapPolyline(Context context) {
         super(context);
@@ -127,8 +128,13 @@ public class MapPolyline extends MapFeature {
         if (polyline != null && (type.equals("fake") || type.equals("single"))) {
             polyline.setPoints(this.coordinates);
         } else if (polyline != null && type.equals("actual")){
-            removeFromMap(this.polylineCollection);
-            addToMap(this.polylineCollection);
+            PolylineManager.Collection collection = polylineCollectionRef != null
+                    ? polylineCollectionRef.get()
+                    : null;
+            if (collection != null) {
+                removeFromMap(collection);
+                addToMap(collection);
+            }
         }
     }
 
@@ -259,15 +265,25 @@ public class MapPolyline extends MapFeature {
             polyline = segment;
             this.polylineArray.add(i, segment);
         }
-        this.polylineCollection = polylineCollection;
+        this.polylineCollectionRef = new SoftReference<>(polylineCollection);
     }
 
     public void doDestroy() {
-        this.removeFromMap(this.polylineCollection);
+        PolylineManager.Collection collection = polylineCollectionRef != null
+                ? polylineCollectionRef.get()
+                : null;
+
+        if (collection != null) {
+            this.removeFromMap(collection);
+        }
+        polylineCollectionRef = null;
     }
 
     @Override
     public void removeFromMap(Object collection) {
+        if (collection == null) {
+            return;
+        }
         PolylineManager.Collection polylineCollection = (PolylineManager.Collection) collection;
         if(this.polylineArray != null){
             for (int i = 0; i < this.polylineArray.size(); i++) {
