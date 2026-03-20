@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.animation.ObjectAnimator;
+import android.view.animation.LinearInterpolator;
 import android.util.Property;
 import android.animation.TypeEvaluator;
 
@@ -105,6 +106,7 @@ public class MapMarker extends MapFeature {
 
     private boolean hasCustomMarkerView = false;
     private final MapMarkerManager markerManager;
+    private ObjectAnimator positionAnimator;
     private String imageUri;
     private boolean loadingImage;
 
@@ -363,6 +365,13 @@ public class MapMarker extends MapFeature {
     }
 
     public void animateToCoodinate(LatLng finalPosition, Integer duration) {
+        // Capture current animated position BEFORE canceling so the new animation
+        // can start exactly from here — avoiding the 1-frame gap that causes a stutter.
+        LatLng fromPosition = marker.getPosition();
+        if (positionAnimator != null) {
+            positionAnimator.cancel();
+            positionAnimator = null;
+        }
         TypeEvaluator<LatLng> typeEvaluator = new TypeEvaluator<LatLng>() {
             @Override
             public LatLng evaluate(float fraction, LatLng startValue, LatLng endValue) {
@@ -370,13 +379,17 @@ public class MapMarker extends MapFeature {
             }
         };
         Property<Marker, LatLng> property = Property.of(Marker.class, LatLng.class, "position");
-        ObjectAnimator animator = ObjectAnimator.ofObject(
+        // Pass both fromPosition and finalPosition so the start value is
+        // explicit — not re-read from marker.getPosition() after cancel.
+        positionAnimator = ObjectAnimator.ofObject(
                 marker,
                 property,
                 typeEvaluator,
+                fromPosition,
                 finalPosition);
-        animator.setDuration(duration);
-        animator.start();
+        positionAnimator.setDuration(duration);
+        positionAnimator.setInterpolator(new LinearInterpolator());
+        positionAnimator.start();
     }
 
     public void setImage(String uri) {
