@@ -155,6 +155,7 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
     private final GestureDetector gestureDetector;
     private boolean paused = false;
     private boolean destroyed = false;
+    private boolean isTransientDetach = false;
     private final ThemedReactContext context;
     private final FusedLocationSource fusedLocationSource;
 
@@ -329,9 +330,26 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
 
-        // Reset lifecycle flags when reattaching
         synchronized (this) {
             paused = false;
+        }
+
+        // If this was just a transient detach (like drawer overlay), skip full restoration
+        if (isTransientDetach) {
+            isTransientDetach = false;
+            // Map is still in good state, just re-enable user location if needed
+            if (showUserLocation && hasPermissions() && map != null) {
+                try {
+                    //noinspection MissingPermission
+                    map.setMyLocationEnabled(true);
+                    if (showMyLocationButton) {
+                        map.getUiSettings().setMyLocationButtonEnabled(true);
+                    }
+                } catch (Exception e) {
+                    Log.e("MapView", "Error re-enabling location after transient detach: " + e.getMessage());
+                }
+            }
+            return;
         }
 
         attachLifecycleObserver();
@@ -362,40 +380,61 @@ public class MapView extends com.google.android.gms.maps.MapView implements Goog
     // Override onDetachedFromWindow to detach lifecycle observer
     @Override
     protected void onDetachedFromWindow() {
+        // Detect if this is a transient detach (e.g., drawer overlay)
+        // by checking if we're still in the view hierarchy but just temporarily hidden
+        isTransientDetach = getParent() != null;
+
         synchronized (this) {
-            // Save instance state if not already saved and map is ready
-            if (map != null && isMapReady) {
-                try {
-                    if (savedMapState == null) {
-                        savedMapState = new Bundle();
+            // Only save full state on permanent detach (not transient overlays like drawers)
+            if (!isTransientDetach) {
+                // Save instance state if not already saved and map is ready
+                if (map != null && isMapReady) {
+                    try {
+                        if (savedMapState == null) {
+                            savedMapState = new Bundle();
+                        }
+                        super.onSaveInstanceState(savedMapState);
+                    } catch (Exception e) {
+                        Log.e("MapView", "Error saving state in onDetachedFromWindow: " + e.getMessage());
+                        // Continue with cleanup even if state saving fails
                     }
-                    super.onSaveInstanceState(savedMapState);
-                } catch (Exception e) {
-                    Log.e("MapView", "Error saving state in onDetachedFromWindow: " + e.getMessage());
-                    // Continue with cleanup even if state saving fails
+                }
+
+                // Pause safely if not already paused (full pause for permanent detach)
+                if (!paused) {
+                    pauseSafely();
+                }
+            } else {
+                // For transient detach (like drawer), just disable user location
+                // to prevent permission errors, but keep map state intact
+                if (hasPermissions() && map != null) {
+                    try {
+                        //noinspection MissingPermission
+                        map.setMyLocationEnabled(false);
+                        map.getUiSettings().setMyLocationButtonEnabled(false);
+                    } catch (Exception e) {
+                        Log.e("MapView", "Error disabling location in transient detach: " + e.getMessage());
+                    }
                 }
             }
+        }
 
-            // Pause safely if not already paused
-            if (!paused) {
-                pauseSafely();
+        if (!isTransientDetach) {
+            // These operations only for permanent detach
+            try {
+                onStop();
+            } catch (Exception e) {
+                Log.e("MapView", "Error during stop in onDetachedFromWindow: " + e.getMessage());
             }
-        }
 
-        // These operations don't need synchronization
-        try {
-            onStop();
-        } catch (Exception e) {
-            Log.e("MapView", "Error during stop in onDetachedFromWindow: " + e.getMessage());
+            savedFeatures = new ArrayList<>(features);
+            features.clear();
+            shouldRestorePadding = true;
+            removeView(attacherGroup);
+            attacherGroup = null;
+            super.onDetachedFromWindow();
+            detachLifecycleObserver();
         }
-
-        savedFeatures = new ArrayList<>(features);
-        features.clear();
-        shouldRestorePadding = true;
-        removeView(attacherGroup);
-        attacherGroup = null;
-        super.onDetachedFromWindow();
-        detachLifecycleObserver();
     }
 
     // Method to attach lifecycle observer
