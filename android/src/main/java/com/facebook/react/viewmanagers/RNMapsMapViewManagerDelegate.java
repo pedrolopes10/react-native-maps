@@ -52,6 +52,9 @@ public class RNMapsMapViewManagerDelegate<T extends View, U extends BaseViewMana
       case "legalLabelInsets":
         mViewManager.setLegalLabelInsets(view, (ReadableMap) value);
         break;
+      case "appleLogoInsets":
+        mViewManager.setAppleLogoInsets(view, (ReadableMap) value);
+        break;
       case "liteMode":
         mViewManager.setLiteMode(view, value == null ? false : (boolean) value);
         break;
