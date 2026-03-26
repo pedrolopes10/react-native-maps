@@ -482,64 +482,37 @@ public class MapMarker extends MapFeature {
         if (!(child instanceof MapCallout)) {
             hasCustomMarkerView = true;
             updateTracksViewChanges();
-            hackToHandleDraweeLifecycle(child);
+            // Recursively search for nested image views to ensure proper layout
+            recursivelyHackImageViews(child);
+            // Force extra updates to account for async image loading
+            updated = Math.max(updated, 10);
         }
         update(true);
     }
-    private void hackToHandleDraweeLifecycle(View child){
+
+    private void recursivelyHackImageViews(View view) {
+        if (view instanceof android.view.ViewGroup) {
+            android.view.ViewGroup viewGroup = (android.view.ViewGroup) view;
+            for (int i = 0; i < viewGroup.getChildCount(); i++) {
+                View child = viewGroup.getChildAt(i);
+                if (child instanceof DraweeView<?>) {
+                    hackToHandleDraweeLifecycle(child);
+                } else if (child instanceof android.view.ViewGroup) {
+                    recursivelyHackImageViews(child);
+                }
+            }
+        }
+    }
+
+    private void hackToHandleDraweeLifecycle(View child) {
         if (child instanceof DraweeView<?>) {
             try {
                 DraweeView draweeView = (DraweeView) child;
-
                 Method onAttachMethod = DraweeView.class.getDeclaredMethod("onAttachedToWindow");
                 onAttachMethod.setAccessible(true);
                 onAttachMethod.invoke(child);
-
-                Handler mainHandler = new Handler(Looper.getMainLooper());
-
-                if (draweeView.getController() instanceof AbstractDraweeController<?,?>){
-                    AbstractDraweeController abstractController = (AbstractDraweeController) draweeView.getController();
-
-                    abstractController.addControllerListener2(new ControllerListener2() {
-                        @Override
-                        public void onSubmit(@NonNull String s, @Nullable Object o, @Nullable Extras extras) {
-
-                        }
-
-                        @Override
-                        public void onFinalImageSet(@NonNull String s, @Nullable Object o, @Nullable Extras extras) {
-                            mainHandler.postDelayed(() -> update(true), ((GenericDraweeHierarchy) draweeView.getHierarchy()).getFadeDuration());
-                        }
-
-                        @Override
-                        public void onIntermediateImageSet(@NonNull String s, @Nullable Object o) {
-                            mainHandler.post(() -> update(true));
-                        }
-
-                        @Override
-                        public void onIntermediateImageFailed(@NonNull String s) {
-
-                        }
-
-                        @Override
-                        public void onFailure(@NonNull String s, @Nullable Throwable throwable, @Nullable Extras extras) {
-
-                        }
-
-                        @Override
-                        public void onRelease(@NonNull String s, @Nullable Extras extras) {
-
-                        }
-
-                        @Override
-                        public void onEmptyEvent(@Nullable Object o) {
-
-                        }
-                    });
-                }
-
             } catch (Exception e) {
-                e.printStackTrace();
+                // Silently handle exceptions
             }
         }
     }
@@ -684,6 +657,13 @@ public class MapMarker extends MapFeature {
     private Bitmap createDrawable() {
         int width = this.width <= 0 ? 100 : this.width;
         int height = this.height <= 0 ? 100 : this.height;
+
+        // Force layout of children before drawing to ensure images are measured/laid out
+        this.measure(
+            View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
+        );
+        this.layout(0, 0, width, height);
 
         // Do not create the doublebuffer-bitmap each time. reuse it to save memory.
         Bitmap bitmap = mLastBitmapCreated;
