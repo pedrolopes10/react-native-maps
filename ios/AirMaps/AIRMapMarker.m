@@ -382,26 +382,49 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
         _reloadImageCancellationBlock();
         _reloadImageCancellationBlock = nil;
     }
+
+    if (!imageSrc) {
+        return;
+    }
+
     __weak __typeof(self) weakSelf = self;
 
-    _reloadImageCancellationBlock = [[[RCTBridge currentBridge] moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:_imageSrc]
-                                                                                                                 size:self.bounds.size
-                                                                                                                scale:RCTScreenScale()
-                                                                                                              clipped:YES
-                                                                                                           resizeMode:RCTResizeModeCenter
-                                                                                                        progressBlock:nil
-                                                                                                     partialLoadBlock:nil
-                                                                                                      completionBlock:^(NSError *error, UIImage *image) {
-        if (error) {
-            // TODO(lmr): do something with the error?
-            NSLog(@"failed to load image: %@", error);
-        }
-        dispatch_async(dispatch_get_main_queue(), ^{
-            __strong __typeof(weakSelf) strongSelf = weakSelf;
-            strongSelf.image = image;
+    id imageLoader = [[RCTBridge currentBridge] moduleForName:@"ImageLoader"];
+
+    if (imageLoader) {
+        // Old architecture: use the bridge image loader
+        _reloadImageCancellationBlock = [imageLoader loadImageWithURLRequest:[RCTConvert NSURLRequest:_imageSrc]
+                                                                        size:self.bounds.size
+                                                                       scale:RCTScreenScale()
+                                                                     clipped:YES
+                                                                  resizeMode:RCTResizeModeCenter
+                                                               progressBlock:nil
+                                                            partialLoadBlock:nil
+                                                             completionBlock:^(NSError *error, UIImage *image) {
+            if (error) {
+                NSLog(@"failed to load image: %@", error);
+            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                __strong __typeof(weakSelf) strongSelf = weakSelf;
+                strongSelf.image = image;
+            });
+        }];
+    } else {
+        // New Architecture: RCTBridge.currentBridge is nil, load image from URL directly
+        NSURL *url = [NSURL URLWithString:imageSrc];
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            NSData *imageData = [NSData dataWithContentsOfURL:url];
+            UIImage *image = imageData ? [UIImage imageWithData:imageData scale:RCTScreenScale()] : nil;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                __strong __typeof(weakSelf) strongSelf = weakSelf;
+                if (strongSelf) {
+                    strongSelf.image = image;
+                }
+            });
         });
-    }];
+    }
 }
+
 
 - (void)setPinColor:(UIColor *)pinColor
 {
