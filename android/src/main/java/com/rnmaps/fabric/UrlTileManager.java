@@ -121,4 +121,14 @@ public class UrlTileManager extends ViewGroupManager<MapUrlTile> implements RNMa
     public void setUrlTemplate(MapUrlTile view, @Nullable String value) {
         view.setUrlTemplate(value);
     }
+
+    @ReactProp(name = "urlCdn")
+    public void setUrlCdn(MapUrlTile view, @Nullable String urlCdn) {
+        view.setUrlCdn(urlCdn);
+    }
+
+    @ReactProp(name = "urlCdnSuffix")
+    public void setUrlCdnSuffix(MapUrlTile view, @Nullable String urlCdnSuffix) {
+        view.setUrlCdnSuffix(urlCdnSuffix);
+    }
 }
