@@ -218,6 +218,11 @@ public class MapViewManager extends ViewGroupManager<MapView> implements RNMapsM
     public void setCompassOffset(MapView view, @Nullable ReadableMap value) {
         // not supported
     }
+    
+    @Override
+    public void setAppleLogoInsets(MapView view, @Nullable ReadableMap value) {
+        // not supported on Android
+    }
 
     @Override
     public void setFollowsUserLocation(MapView view, boolean value) {
