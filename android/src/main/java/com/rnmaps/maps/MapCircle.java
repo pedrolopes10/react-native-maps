@@ -10,6 +10,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.collections.CircleManager;
 import com.rnmaps.fabric.event.OnPressEvent;
 
+import java.lang.ref.SoftReference;
 import java.util.Map;
 
 public class MapCircle extends MapFeature {
@@ -25,7 +26,7 @@ public class MapCircle extends MapFeature {
   private float zIndex;
   private boolean tappable;
 
-  private CircleManager.Collection circleCollection;
+  private SoftReference<CircleManager.Collection> circleCollectionRef;
 
   public MapCircle(Context context) {
     super(context);
@@ -113,17 +114,28 @@ public class MapCircle extends MapFeature {
   public void addToMap(Object collection) {
     CircleManager.Collection circleCollection = (CircleManager.Collection) collection;
     circle = circleCollection.addCircle(getCircleOptions());
-    this.circleCollection = circleCollection;
+    this.circleCollectionRef = new SoftReference<>(circleCollection);
   }
 
   public void doDestroy() {
-    this.removeFromMap(this.circleCollection);
+    CircleManager.Collection collection = circleCollectionRef != null
+            ? circleCollectionRef.get()
+            : null;
+
+    if (collection != null) {
+      this.removeFromMap(collection);
+    }
+    circleCollectionRef = null;
   }
 
   @Override
   public void removeFromMap(Object collection) {
+    if (circle == null) {
+      return;
+    }
     CircleManager.Collection circleCollection = (CircleManager.Collection) collection;
     circleCollection.remove(circle);
+    circle = null;
   }
 
 
