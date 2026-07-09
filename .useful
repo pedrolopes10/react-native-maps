@@ -1,36 +1,72 @@
-# Before committing a new release version, build to update the lib directory
-- Change things
-- then from the root of the project ...
+# react-native-maps — build & release cheat sheet
+# Notes taken for RNMaps v1.26.10+ / RN v0.81.1 (New Arch)
+#
+# This package is developed on both Windows and macOS.
+#   - Windows can do: JS/TS work, Android, codegen for BOTH platforms, tests/lint.
+#   - macOS is required for: CocoaPods (pod install) and building/running the iOS example app.
 
-## For RN New Arch
-- Note: these notes were taken for RNMaps v1.26.10 RN v0.81.1
+# =====================================================================
+# 1. One-time setup after clone / after changing dependencies (ANY OS)
+# =====================================================================
+yarn bootstrap
+#   = yarn --cwd example && yarn   (installs deps for example app and root)
+#
+# macOS ONLY — if you will build the iOS example app, use instead:
+yarn bootstrap:mac
+#   = bootstrap + bundle-install (Ruby gems/CocoaPods) + pod-install
+#   pod-install runs: cd example/ios && RCT_NEW_ARCH_ENABLED=1 bundle exec pod install
+#   (POSIX env-var syntax — will NOT run on Windows, and pods need Xcode anyway)
 
-- Install stuff
-yarn
-
-- Build TypeScript (so the spec file is discoverable)
+# =====================================================================
+# 2. After changing things (before committing a new release version)
+# =====================================================================
+# Build TypeScript — updates dist/ and plugin/build, and makes the spec
+# files discoverable by codegen:
 yarn build
 
-- Run the codegen artifact generator
-npx react-native codegen
+# Regenerate the committed codegen artifacts (ANY OS — do NOT delete
+# android/src/main or ios/generated first, files are committed on purpose):
+yarn codegen
+#   = yarn codegen:android   -> android/src/main   (java package com.rnmaps.fabric)
+#   + yarn codegen:ios       -> ios/generated      (RNMapsSpecs + delegates)
+#
+# These call node_modules/react-native/scripts/generate-codegen-artifacts.js
+# directly with `-s library`, which is the reliable path on both OSs.
+#
+# NOTE on `npx react-native codegen` (the CLI variant): it also regenerates the
+# app-level provider files committed in ios/generated (RCTThirdPartyComponentsProvider,
+# RCTModuleProviders, RCTAppDependencyProvider, ...). Those only change when
+# modules/components are added, renamed or removed. Known kink in RN 0.81: it ends with
+#   [Codegen] TypeError [ERR_INVALID_ARG_TYPE]: The "from" argument must be of type string...
+# AFTER generating everything except ReactCodegen.podspec — the error is harmless,
+# but the process exits 1. Run it only when providers need updating, then verify
+# git diff. ATTENTION: do NOT remove dir ios/generated.
 
--- iOS
--- NOTE: there is some kind of a kink in configs or commands that makes the CLI
--- codegen command fail and not place the files where they are suppose to be, it
--- fails semi-silently with "[Codegen] Done." output, but it does throw an error
--- "[Codegen] TypeError [ERR_INVALID_ARG_TYPE]: The "from" argument must be of type string. Received undefined"
--- So run the following iOS specific command to generate codegen files
--- ATTENTION: do NOT remove dir ios/generated
-node ./node_modules/react-native/scripts/generate-codegen-artifacts.js -p . -o ./ios/generated -t ios -s library -n RNMapsSpecs -c
+# =====================================================================
+# 3. Verify (this is exactly what the pre-commit hook runs, ANY OS)
+# =====================================================================
+yarn lint
+yarn tscheck
+yarn format-check
+yarn test
 
-- Run
-yarn bootstrap
-
----
-
-# Test the example app
-- After your changes and ran all the build, codegen and bootstrap commands, if
-- you wish to test the example app with your new changes:
-
-- Setup example app with Google MAPS_API_KEY for both iOS and Android
+# =====================================================================
+# 4. Test the example app
+# =====================================================================
+# Setup example app with Google MAPS_API_KEY for both iOS and Android:
 file://./docs/examples-setup.md
+#
+# Android (Windows or macOS): open example/android in Android Studio or
+#   cd example && yarn start   +   run the app from Android Studio / gradlew
+# iOS (macOS ONLY): yarn bootstrap:mac first, then open
+#   example/ios/*.xcworkspace in Xcode.
+
+# =====================================================================
+# Commit hooks (husky)
+# =====================================================================
+# pre-commit  -> lint + tscheck + format-check + test (blocking).
+#   Windows line-ending gotcha is handled: .prettierrc has "endOfLine": "auto",
+#   so CRLF checkouts (git core.autocrlf=true) pass format-check.
+# commit-msg  -> commitlint (conventional commits) is ADVISORY on this fork:
+#   a non-conventional message prints a warning but the commit goes through,
+#   so the plain "Commit" button works — no need for "Commit (No Verify)".

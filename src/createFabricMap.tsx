@@ -131,7 +131,11 @@ const createFabricMap = (
           );
         }
       },
-      animateToRegion(region: Region, duration: number, edgePadding?: EdgePadding) {
+      animateToRegion(
+        region: Region,
+        duration: number,
+        edgePadding?: EdgePadding,
+      ) {
         if (fabricRef.current) {
           try {
             (Commands as any).animateToRegion(
@@ -149,14 +153,18 @@ const createFabricMap = (
           );
         }
       },
-      fitToElements(edgePadding: EdgePadding, animated: boolean, duration: number) {
+      fitToElements(
+        edgePadding: EdgePadding,
+        animated: boolean,
+        duration: number,
+      ) {
         if (fabricRef.current) {
           try {
             (Commands as any).fitToElements(
               fabricRef.current,
               JSON.stringify(edgePadding),
               animated,
-              duration
+              duration,
             );
           } catch (error) {
             throw new Error('Failed to fitToElements');
@@ -189,7 +197,11 @@ const createFabricMap = (
           );
         }
       },
-      animateCamera(camera: Partial<Camera>, duration: number, edgePadding?: EdgePadding) {
+      animateCamera(
+        camera: Partial<Camera>,
+        duration: number,
+        edgePadding?: EdgePadding,
+      ) {
         if (fabricRef.current) {
           try {
             (Commands as any).animateCamera(

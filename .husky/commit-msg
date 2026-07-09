@@ -1,1 +1,5 @@
-yarn commitlint --edit "$1"
+# Advisory only: warn about non-conventional commit messages without blocking the commit.
+# Upstream react-native-maps uses conventional commits (feat:/fix:/chore: ...) to drive
+# semantic-release. This fork commits plain messages, so a failed check only prints a hint.
+# To make it blocking again, replace this line with: yarn commitlint --edit "$1"
+yarn commitlint --edit "$1" || echo "commit-msg: message is not conventional-commit style (feat:/fix:/...). Allowed anyway."
