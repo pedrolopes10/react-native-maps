@@ -312,4 +312,11 @@ public class MarkerManager extends ViewGroupManager<MapMarker> implements RNMaps
     public void setTop(MapMarker view, boolean value) {
         // No-Op stub for Android maintenance
     }
+
+    // ANSY
+    @Override
+    public void setZIndex(MapMarker view, float zIndex) {
+        super.setZIndex(view, zIndex);
+        view.setZIndex(Math.round(zIndex));
+    }
 }
