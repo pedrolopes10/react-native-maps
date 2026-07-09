@@ -17,8 +17,9 @@
     _shouldReplaceMapContent = shouldReplaceMapContent;
     if (self.tileOverlay) {
         self.tileOverlay.canReplaceMapContent = _shouldReplaceMapContent;
+        // canReplaceMapContent is only read by MapKit when the overlay is attached
+        [self update];
     }
-    [self update];
 }
 
 - (void)setMaximumZ:(NSInteger)maximumZ
@@ -26,8 +27,8 @@
     _maximumZ = maximumZ;
     if (self.tileOverlay) {
         self.tileOverlay.maximumZ = _maximumZ;
+        if (self.renderer) [self.renderer reloadData];
     }
-    [self update];
 }
 
 - (void)setMaximumNativeZ:(NSInteger)maximumNativeZ
@@ -36,10 +37,11 @@
     _maximumNativeZSet = YES;
     if (_cachedOverlayCreated) {
         self.tileOverlay.maximumNativeZ = _maximumNativeZ;
+        if (self.renderer) [self.renderer reloadData];
     } else {
         [self createTileOverlayAndRendererIfPossible];
+        [self update];
     }
-    [self update];
 }
 
 - (void)setMinimumZ:(NSInteger)minimumZ
@@ -47,8 +49,8 @@
     _minimumZ = minimumZ;
     if (self.tileOverlay) {
         self.tileOverlay.minimumZ = _minimumZ;
+        if (self.renderer) [self.renderer reloadData];
     }
-    [self update];
 }
 
 - (void)setFlipY:(BOOL)flipY
@@ -57,8 +59,8 @@
     _flipYSet = YES;
     if (self.tileOverlay) {
         self.tileOverlay.geometryFlipped = _flipY;
+        if (self.renderer) [self.renderer reloadData];
     }
-    [self update];
 }
 
 - (void)setUrlTemplate:(NSString *)urlTemplate
@@ -92,8 +94,8 @@
         self.tileOverlay.tileCacheMaxAge = _tileCacheMaxAge;
     } else {
         [self createTileOverlayAndRendererIfPossible];
+        [self update];
     }
-    [self update];
 }
 
 - (void)setOfflineMode:(BOOL)offlineMode
@@ -113,8 +115,8 @@
         self.renderer.alpha = opacity;
     } else {
         [self createTileOverlayAndRendererIfPossible];
+        [self update];
     }
-    [self update];
 }
 
 - (void)createTileOverlayAndRendererIfPossible
@@ -178,16 +180,19 @@
 - (void)update
 {
     if (!_renderer) return;
-    
+
     if (_map == nil) return;
+    // MapKit caches the renderer per overlay, so a rebuilt overlay/renderer only
+    // takes effect after detaching and re-attaching. Re-insert at the original
+    // position: appending would lift the tile layer above sibling overlays, which
+    // is what the old code compensated for by removing and re-adding every other
+    // overlay on the map — making them all flicker on each tile prop change.
+    NSUInteger index = [[_map overlaysInLevel:MKOverlayLevelAboveLabels] indexOfObject:self];
     [_map removeOverlay:self];
-    [_map addOverlay:self level:MKOverlayLevelAboveLabels];
-    for (id<MKOverlay> overlay in _map.overlays) {
-        if ([overlay isKindOfClass:[AIRMapUrlTile class]]) {
-            continue;
-        }
-        [_map removeOverlay:overlay];
-        [_map addOverlay:overlay];
+    if (index == NSNotFound) {
+        [_map addOverlay:self level:MKOverlayLevelAboveLabels];
+    } else {
+        [_map insertOverlay:self atIndex:index level:MKOverlayLevelAboveLabels];
     }
 }
 
