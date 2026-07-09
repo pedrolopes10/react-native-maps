@@ -45,7 +45,13 @@ import java.util.Random;
 
 public class MapTileProvider implements TileProvider {
 
-	class AIRMapUrlTileProvider extends UrlTileProvider {
+	public interface UrlUpdatable {
+		void setUrlTemplate(String urlTemplate);
+		void setUrlCdn(String urlCdn);
+		void setUrlCdnSuffix(String urlCdnSuffix);
+	}
+
+	class AIRMapUrlTileProvider extends UrlTileProvider implements UrlUpdatable {
     		private String urlTemplate;
 		protected String urlCdn;
 		protected String urlCdnSuffix;
@@ -96,6 +102,14 @@ public class MapTileProvider implements TileProvider {
 
 		public void setUrlTemplate(String urlTemplate) {
 			this.urlTemplate = urlTemplate;
+		}
+
+		public void setUrlCdn(String urlCdn) {
+			this.urlCdn = urlCdn;
+		}
+
+		public void setUrlCdnSuffix(String urlCdnSuffix) {
+			this.urlCdnSuffix = urlCdnSuffix;
 		}
   }
 
@@ -462,14 +476,23 @@ public class MapTileProvider implements TileProvider {
 
 	public void setUrlTemplate(String urlTemplate) {
 		this.urlTemplate = urlTemplate;
+		if (this.tileProvider instanceof UrlUpdatable) {
+			((UrlUpdatable) this.tileProvider).setUrlTemplate(urlTemplate);
+		}
 	}
 
 	public void setUrlCdn(String urlCdn) {
 		this.urlCdn = urlCdn;
+		if (this.tileProvider instanceof UrlUpdatable) {
+			((UrlUpdatable) this.tileProvider).setUrlCdn(urlCdn);
+		}
 	}
 
 	public void setUrlCdnSuffix(String urlCdnSuffix) {
 		this.urlCdnSuffix = urlCdnSuffix;
+		if (this.tileProvider instanceof UrlUpdatable) {
+			((UrlUpdatable) this.tileProvider).setUrlCdnSuffix(urlCdnSuffix);
+		}
 	}
 
 	public void setTileSize(int tileSize) {

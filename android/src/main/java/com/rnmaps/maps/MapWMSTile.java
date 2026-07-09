@@ -15,7 +15,7 @@ public class MapWMSTile extends MapUrlTile {
 
   class AIRMapGSUrlTileProvider extends MapTileProvider {
 
-    class AIRMapWMSTileProvider extends UrlTileProvider {
+    class AIRMapWMSTileProvider extends UrlTileProvider implements MapTileProvider.UrlUpdatable {
       private String urlTemplate;
       private String urlCdn;
       private String urlCdnSuffix;
