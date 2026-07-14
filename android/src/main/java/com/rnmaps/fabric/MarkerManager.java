@@ -313,7 +313,12 @@ public class MarkerManager extends ViewGroupManager<MapMarker> implements RNMaps
         // No-Op stub for Android maintenance
     }
 
-    // ANSY
+    // ANSY: zIndex is a base ViewProp, so it is not routed through the codegen
+    // delegate (RNMapsMarkerManagerDelegate has no case for it) — it reaches the
+    // manager via BaseViewManagerDelegate → setZIndex. Without this override only
+    // BaseViewManager's generic Android View z-translation ran, and the Google
+    // Maps Marker.setZIndex was never called: marker stacking silently degraded
+    // to insertion order (shadows intermittently rendering above aircraft icons).
     @Override
     public void setZIndex(MapMarker view, float zIndex) {
         super.setZIndex(view, zIndex);

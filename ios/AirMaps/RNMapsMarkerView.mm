@@ -439,6 +439,18 @@ _view.name = CGPointMake(newViewProps.name.x, newViewProps.name.y); \
 
     REMAP_MAPVIEW_PROP(top)
 
+    // ANSY: forward pointerEvents to the detached annotation view. _view lives in
+    // MapKit's hierarchy (not under this Fabric wrapper), so the standard ViewProps
+    // handling never reaches it — leaving markers hit-testable and natively
+    // selectable by MKMapView even when JS passes pointerEvents="none". MapKit
+    // hoists selected annotations above all others, so a tap landing on a shadow
+    // marker pinned it on top of every aircraft icon until the next selection.
+    if (newViewProps.pointerEvents != oldViewProps.pointerEvents) {
+        BOOL interactive = newViewProps.pointerEvents != PointerEventsMode::None;
+        _view.userInteractionEnabled = interactive;
+        _view.enabled = interactive;
+    }
+
     [super updateProps:props oldProps:oldProps];
 }
 

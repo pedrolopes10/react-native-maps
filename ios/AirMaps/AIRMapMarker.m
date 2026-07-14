@@ -149,7 +149,9 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
         // if it has a non-null image, it means we want to render a custom marker with the image.
         // In either case, we want to return the AIRMapMarker since it is both an MKAnnotation and an
         // MKAnnotationView all at the same time.
-        self.layer.zPosition = self.zIndex;
+        // ANSY: write through stickyZPosition — plain zPosition writes are
+        // discarded by ZPositionableLayer (see setZIndex).
+        self.stickyZPosition = self.zIndex;
         self.zPriority = self.zIndex;
         self.transform = CGAffineTransformMakeRotation(self.rotation);
 
@@ -441,7 +443,11 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
 {
     _zIndexBeforeOpen = zIndex;
     _zIndex = _calloutIsOpen ? zIndex + AIR_CALLOUT_OPEN_ZINDEX_BASELINE : zIndex;
-    self.layer.zPosition = zIndex;
+    // ANSY: plain layer.zPosition writes are discarded by ZPositionableLayer
+    // (AnnotationView's layer class no-ops them to block MapKit's automatic
+    // z management), so zIndex silently never affected stacking. stickyZPosition
+    // is the write-through accessor — use it so zIndex actually orders markers.
+    self.stickyZPosition = _zIndex;
 }
 
 - (BOOL)isSelected {
