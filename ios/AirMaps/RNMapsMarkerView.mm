@@ -439,6 +439,10 @@ _view.name = CGPointMake(newViewProps.name.x, newViewProps.name.y); \
 
     REMAP_MAPVIEW_PROP(top)
 
+    if (newViewProps.imageScale != oldViewProps.imageScale) {
+        [_view setImageScale:newViewProps.imageScale];
+    }
+
     // ANSY: forward pointerEvents to the detached annotation view. _view lives in
     // MapKit's hierarchy (not under this Fabric wrapper), so the standard ViewProps
     // handling never reaches it — leaving markers hit-testable and natively

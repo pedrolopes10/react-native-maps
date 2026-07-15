@@ -36,6 +36,7 @@
 @property (nonatomic, strong) UIColor *pinColor;
 @property (nonatomic, assign) NSInteger zIndex;
 @property (nonatomic, assign) BOOL top;
+@property (nonatomic, assign) CGFloat imageScale;
 @property (nonatomic, assign) CLLocationDegrees rotation;
 @property (nonatomic, assign) double opacity;
 @property (nonatomic, assign) BOOL isPreselected;

@@ -317,6 +317,7 @@ export interface MarkerFabricNativeProps extends ViewProps {
   // ANSY: custom props
   rotation?: WithDefault<Double, 0.0>;
   top?: boolean;
+  imageScale?: WithDefault<Double, 1.0>;
 }
 export interface NativeCommands {
   animateToCoordinates: (

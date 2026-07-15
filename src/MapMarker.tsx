@@ -161,6 +161,16 @@ export type MapMarkerProps = ViewProps & {
   image?: ImageURISource | ImageRequireSource;
 
   /**
+   * ANSY: Scale factor applied to the `image` bitmap (1.0 = intrinsic size).
+   * Ignored when `image` is not set.
+   *
+   * @default 1.0
+   * @platform iOS: Supported
+   * @platform Android: Supported
+   */
+  imageScale?: number;
+
+  /**
    * When true, the marker will be pre-selected.
    * Setting this to true allows the user to drag the marker without needing to tap on it first to focus it.
    *
@@ -256,6 +266,16 @@ export type MapMarkerProps = ViewProps & {
    * @platform Android: Supported
    */
   rotation?: number;
+
+  /**
+   * ANSY: When annotation views are added to the map, `true` brings this
+   * marker's view to the front of the hierarchy; `false`/`null`/unset sends
+   * it to the back (see AIRMapManager didAddAnnotationViews).
+   *
+   * @platform iOS: Apple Maps only
+   * @platform Android: Not supported (no-op)
+   */
+  top?: boolean | null;
 
   /**
    * Sets whether this marker should propagate `onPress` events.

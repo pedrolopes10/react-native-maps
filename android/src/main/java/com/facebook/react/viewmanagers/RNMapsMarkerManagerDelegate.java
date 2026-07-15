@@ -85,6 +85,9 @@ public class RNMapsMarkerManagerDelegate<T extends View, U extends BaseViewManag
       case "top":
         mViewManager.setTop(view, value == null ? false : (boolean) value);
         break;
+      case "imageScale":
+        mViewManager.setImageScale(view, value == null ? 1f : ((Double) value).doubleValue());
+        break;
       default:
         super.setProperty(view, propName, value);
     }

@@ -1726,6 +1726,7 @@ class RNMapsMarkerProps final : public ViewProps {
   bool useLegacyPinView{false};
   double rotation{0.0};
   bool top{false};
+  double imageScale{1.0};
 
   #ifdef RN_SERIALIZABLE_STATE
   ComponentName getDiffPropsImplementationTarget() const override;

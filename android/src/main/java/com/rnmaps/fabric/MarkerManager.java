@@ -313,6 +313,12 @@ public class MarkerManager extends ViewGroupManager<MapMarker> implements RNMaps
         // No-Op stub for Android maintenance
     }
 
+    // ANSY
+    @Override
+    public void setImageScale(MapMarker view, double value) {
+        view.setImageScale((float) value);
+    }
+
     // ANSY: zIndex is a base ViewProp, so it is not routed through the codegen
     // delegate (RNMapsMarkerManagerDelegate has no case for it) — it reaches the
     // manager via BaseViewManagerDelegate → setZIndex. Without this override only

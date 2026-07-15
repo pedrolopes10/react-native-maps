@@ -231,6 +231,11 @@ public class MapMarkerManager extends ViewGroupManager<MapMarker> {
         view.setImage(source);
     }
 
+    @ReactProp(name = "imageScale", defaultFloat = 1.0f)
+    public void setImageScale(MapMarker view, float imageScale) {
+        view.setImageScale(imageScale);
+    }
+
     @ReactProp(name = "pinColor", defaultInt = Color.RED, customType = "Color")
     public void setPinColor(MapMarker view, int pinColor) {
         float[] hsv = new float[3];

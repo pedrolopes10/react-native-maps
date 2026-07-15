@@ -35,6 +35,7 @@ public interface RNMapsMarkerManagerInterface<T extends View> extends ViewManage
   void setUseLegacyPinView(T view, boolean value);
   void setRotation(T view, double value);
   void setTop(T view, boolean value);
+  void setImageScale(T view, double value);
   void animateToCoordinates(T view, double latitude, double longitude, int duration);
   void setCoordinates(T view, double latitude, double longitude);
   void showCallout(T view);

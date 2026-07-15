@@ -36,6 +36,7 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
     NSTimeInterval _animationStartTime;
     NSTimeInterval _animationDuration;
     BOOL _isAnimating;
+    UIImage *_unscaledImage;
 }
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
@@ -408,7 +409,10 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 __strong __typeof(weakSelf) strongSelf = weakSelf;
-                strongSelf.image = image;
+                if (strongSelf) {
+                    strongSelf->_unscaledImage = image;
+                    strongSelf.image = [strongSelf air_scaledImage:image];
+                }
             });
         }];
     } else {
@@ -420,11 +424,41 @@ NSInteger const AIR_CALLOUT_OPEN_ZINDEX_BASELINE = 999;
             dispatch_async(dispatch_get_main_queue(), ^{
                 __strong __typeof(weakSelf) strongSelf = weakSelf;
                 if (strongSelf) {
-                    strongSelf.image = image;
+                    strongSelf->_unscaledImage = image;
+                    strongSelf.image = [strongSelf air_scaledImage:image];
                 }
             });
         });
     }
+}
+
+- (void)setImageScale:(CGFloat)imageScale
+{
+    if (_imageScale == imageScale) return;
+    _imageScale = imageScale;
+
+    if (_unscaledImage) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.image = [self air_scaledImage:self->_unscaledImage];
+        });
+    }
+}
+
+// Returns `image` resized by `imageScale` (1.0/unset = intrinsic size).
+// The image is resized rather than transform-scaled so it composes with the
+// rotation transform and keeps centerOffset/anchor semantics untouched.
+- (UIImage *)air_scaledImage:(UIImage *)image
+{
+    if (!image || _imageScale <= 0 || _imageScale == 1.0) {
+        return image;
+    }
+    CGSize size = CGSizeMake(image.size.width * _imageScale, image.size.height * _imageScale);
+    UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat preferredFormat];
+    format.opaque = NO;
+    UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:size format:format];
+    return [renderer imageWithActions:^(UIGraphicsImageRendererContext * _Nonnull rendererContext) {
+        [image drawInRect:CGRectMake(0, 0, size.width, size.height)];
+    }];
 }
 
 

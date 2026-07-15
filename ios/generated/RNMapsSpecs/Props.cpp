@@ -664,7 +664,8 @@ RNMapsMarkerProps::RNMapsMarkerProps(
     subtitleVisibility(convertRawProp(context, rawProps, "subtitleVisibility", sourceProps.subtitleVisibility, {RNMapsMarkerSubtitleVisibility::Adaptive})),
     useLegacyPinView(convertRawProp(context, rawProps, "useLegacyPinView", sourceProps.useLegacyPinView, {false})),
     rotation(convertRawProp(context, rawProps, "rotation", sourceProps.rotation, {0.0})),
-    top(convertRawProp(context, rawProps, "top", sourceProps.top, {false})) {}
+    top(convertRawProp(context, rawProps, "top", sourceProps.top, {false})),
+    imageScale(convertRawProp(context, rawProps, "imageScale", sourceProps.imageScale, {1.0})) {}
     
 #ifdef RN_SERIALIZABLE_STATE
 ComponentName RNMapsMarkerProps::getDiffPropsImplementationTarget() const {
@@ -760,6 +761,10 @@ folly::dynamic RNMapsMarkerProps::getDiffProps(
     
   if (top != oldProps->top) {
     result["top"] = top;
+  }
+
+  if ((imageScale != oldProps->imageScale) && !(std::isnan(imageScale) && std::isnan(oldProps->imageScale))) {
+    result["imageScale"] = imageScale;
   }
   return result;
 }

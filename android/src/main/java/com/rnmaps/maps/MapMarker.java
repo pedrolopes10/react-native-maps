@@ -89,6 +89,15 @@ public class MapMarker extends MapFeature {
     private BitmapDescriptor iconBitmapDescriptor;
     private Bitmap iconBitmap;
 
+    // Scale factor applied to the `image` bitmap (1.0 = intrinsic size).
+    // The base bitmap is shared across markers (see AirMapMarkerSharedIcon);
+    // the scaled descriptor is cached per marker and rebuilt only when the
+    // source bitmap or the scale changes.
+    private float imageScale = 1.0f;
+    private BitmapDescriptor scaledIconDescriptor;
+    private Bitmap scaledIconSourceBitmap;
+    private float scaledIconScale = 1.0f;
+
     private float rotation = 0.0f;
     private boolean flat = false;
     private boolean draggable = false;
@@ -586,11 +595,34 @@ public class MapMarker extends MapFeature {
             }
         } else if (iconBitmapDescriptor != null) {
             // use local image as a marker
-            return iconBitmapDescriptor;
+            return getScaledIcon();
         } else {
             // render the default marker pin
             return BitmapDescriptorFactory.defaultMarker(this.markerHue);
         }
+    }
+
+    public void setImageScale(float imageScale) {
+        if (this.imageScale == imageScale) return;
+        this.imageScale = imageScale;
+        update(true);
+    }
+
+    private BitmapDescriptor getScaledIcon() {
+        if (imageScale == 1.0f || imageScale <= 0 || iconBitmap == null) {
+            return iconBitmapDescriptor;
+        }
+        if (scaledIconDescriptor == null
+                || scaledIconSourceBitmap != iconBitmap
+                || scaledIconScale != imageScale) {
+            int width = Math.max(1, Math.round(iconBitmap.getWidth() * imageScale));
+            int height = Math.max(1, Math.round(iconBitmap.getHeight() * imageScale));
+            scaledIconDescriptor = BitmapDescriptorFactory.fromBitmap(
+                    Bitmap.createScaledBitmap(iconBitmap, width, height, true));
+            scaledIconSourceBitmap = iconBitmap;
+            scaledIconScale = imageScale;
+        }
+        return scaledIconDescriptor;
     }
 
     private MarkerOptions fillMarkerOptions(MarkerOptions options) {
