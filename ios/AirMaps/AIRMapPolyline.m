@@ -8,18 +8,41 @@
 #import <React/UIView+React.h>
 
 
+// ANSY: every prop setter used to remove the overlay from the map and add it
+// back at once, and a React update sets several props: one coordinates change
+// was half a dozen overlay swaps, plus geodesic lines built twice, on the main
+// thread. Apps that redraw lines several times a second (rbapp's playback
+// trails) stalled the map for ~50 ms a time. After the first build, changes
+// are now gathered and applied once, on the next turn of the main run loop.
 @implementation AIRMapPolyline {
-    
+    BOOL _updateScheduled;
+    BOOL _coordinatesDirty;
+}
+
+- (void)scheduleUpdate {
+    if (_updateScheduled) return;
+    _updateScheduled = YES;
+    __weak AIRMapPolyline *weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        AIRMapPolyline *strongSelf = weakSelf;
+        if (!strongSelf) return;
+        strongSelf->_updateScheduled = NO;
+        if (strongSelf->_coordinatesDirty) {
+            strongSelf->_coordinatesDirty = NO;
+            [strongSelf buildPolyline];
+        }
+        [strongSelf update];
+    });
 }
 
 - (void)setFillColor:(UIColor *)fillColor {
     _fillColor = fillColor;
-    [self update];
+    [self scheduleUpdate];
 }
 
 - (void)setStrokeColor:(UIColor *)strokeColor {
     _strokeColor = strokeColor;
-    [self update];
+    [self scheduleUpdate];
 }
 
 - (void)setStrokeColors:(NSArray<UIColor *> *)strokeColors {
@@ -27,49 +50,65 @@
     if ((self.renderer != nil) && ![_renderer isKindOfClass:[AIRMapPolylineRenderer class]]) {
         self.renderer = [self createRenderer];
     }
-    [self update];
+    [self scheduleUpdate];
 }
 
 - (void)setStrokeWidth:(CGFloat)strokeWidth {
     _strokeWidth = strokeWidth;
-    [self update];
+    [self scheduleUpdate];
 }
 
 - (void)setLineJoin:(CGLineJoin)lineJoin {
     _lineJoin = lineJoin;
-    [self update];
+    [self scheduleUpdate];
 }
 
 - (void)setLineCap:(CGLineCap)lineCap {
     _lineCap = lineCap;
-    [self update];
+    [self scheduleUpdate];
 }
 
 - (void)setMiterLimit:(CGFloat)miterLimit {
     _miterLimit = miterLimit;
-    [self update];
+    [self scheduleUpdate];
 }
 
 - (void)setLineDashPhase:(CGFloat)lineDashPhase {
     _lineDashPhase = lineDashPhase;
-    [self update];
+    [self scheduleUpdate];
 }
 
 - (void)setLineDashPattern:(NSArray <NSNumber *> *)lineDashPattern {
     _lineDashPattern = lineDashPattern;
-    [self update];
+    [self scheduleUpdate];
 }
 
 -(void)setGeodesic:(BOOL)geodesic
 {
   _geodesic = geodesic;
-    if(_coordinates){
+    if (_coordinates && self.polyline != nil) {
+        _coordinatesDirty = YES;
+        [self scheduleUpdate];
+    } else if (_coordinates) {
         [self setCoordinates:_coordinates];
     }
 }
 
 - (void)setCoordinates:(NSArray<AIRMapCoordinate *> *)coordinates {
     _coordinates = coordinates;
+    // the first build is immediate: the map asks for the overlay's renderer
+    // as soon as it is added, and has to get one
+    if (self.polyline != nil) {
+        _coordinatesDirty = YES;
+        [self scheduleUpdate];
+        return;
+    }
+    [self buildPolyline];
+    [self update];
+}
+
+- (void)buildPolyline {
+    NSArray<AIRMapCoordinate *> *coordinates = _coordinates;
     CLLocationCoordinate2D *coords = calloc(coordinates.count, sizeof(CLLocationCoordinate2D));
     for(int i = 0; i < coordinates.count; i++)
     {
@@ -83,7 +122,6 @@
     free(coords);
     
     self.renderer = [self createRenderer];
-    [self update];
 }
 
 - (MKOverlayPathRenderer*)createRenderer {
