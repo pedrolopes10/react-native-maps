@@ -72,6 +72,22 @@ public class PolylineManager extends ViewGroupManager<MapPolyline> implements RN
         view.setCoordinates(value);
     }
 
+    // ANSY: move the line without a React render, "lat,lng;lat,lng;…"
+    @Override
+    public void updateCoordinates(MapPolyline view, String coordinates) {
+        java.util.List<com.google.android.gms.maps.model.LatLng> points = new java.util.ArrayList<>();
+        for (String pair : coordinates.split(";")) {
+            String[] latLng = pair.split(",");
+            if (latLng.length != 2) continue;
+            try {
+                points.add(new com.google.android.gms.maps.model.LatLng(
+                        Double.parseDouble(latLng[0]), Double.parseDouble(latLng[1])));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        if (points.size() >= 2) view.setPoints(points);
+    }
+
 
     @Override
     public void setStrokeColor(MapPolyline view, @Nullable Integer value) {

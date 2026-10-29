@@ -59,4 +59,13 @@ public class RNMapsPolylineManagerDelegate<T extends View, U extends BaseViewMan
         super.setProperty(view, propName, value);
     }
   }
+
+  @Override
+  public void receiveCommand(T view, String commandName, ReadableArray args) {
+    switch (commandName) {
+      case "updateCoordinates":
+        mViewManager.updateCoordinates(view, args.getString(0));
+        break;
+    }
+  }
 }

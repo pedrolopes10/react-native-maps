@@ -26,4 +26,5 @@ public interface RNMapsPolylineManagerInterface<T extends View> extends ViewMana
   void setSyncedCoordsColors(T view, @Nullable ReadableMap value);
   void setStrokeWidth(T view, float value);
   void setTappable(T view, boolean value);
+  void updateCoordinates(T view, String coordinates);
 }

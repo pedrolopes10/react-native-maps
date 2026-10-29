@@ -1,6 +1,6 @@
 import type {HostComponent, ViewProps, ColorValue} from 'react-native';
 
-import {codegenNativeComponent} from 'react-native';
+import {codegenNativeComponent, codegenNativeCommands} from 'react-native';
 import type {
   Double,
   Float,
@@ -132,6 +132,19 @@ export interface PolylineFabricNativeProps extends ViewProps {
    */
   tappable?: boolean;
 }
+
+export interface NativeCommands {
+  // ANSY: move the line without a React render, as "lat,lng;lat,lng;…"
+  // (a command takes no array of objects)
+  updateCoordinates: (
+    viewRef: React.ElementRef<HostComponent<PolylineFabricNativeProps>>,
+    coordinates: string,
+  ) => void;
+}
+
+export const Commands: NativeCommands = codegenNativeCommands<NativeCommands>({
+  supportedCommands: ['updateCoordinates'],
+});
 
 export default codegenNativeComponent<PolylineFabricNativeProps>(
   'RNMapsPolyline',

@@ -68,6 +68,14 @@ public class MapPolyline extends MapFeature {
          */
     }
 
+    // ANSY: the updateCoordinates command
+    public void setPoints(List<LatLng> points) {
+        this.coordinates = points;
+        if (polyline != null) {
+            polyline.setPoints(points);
+        }
+    }
+
     public void setColor(int color) {
         this.color = color;
         if (polyline != null) {

@@ -9,6 +9,7 @@ import decorateMapComponent, {
   type UIManagerCommand,
 } from './decorateMapComponent';
 import type {LatLng, LineCapType, LineJoinType, Point} from './sharedTypes';
+import {Commands as PolylineCommands} from './specs/NativeComponentPolyline';
 
 type PolylineData = {
   type: string;
@@ -181,6 +182,18 @@ export class MapPolyline extends React.Component<MapPolylineProps> {
 
   setNativeProps(props: Partial<NativeProps>) {
     this.polyline.current?.setNativeProps(props);
+  }
+
+  // ANSY: move the line natively, without a React render (a line that follows
+  // something moving every frame). On iOS the command reaches AIRMapPolyline
+  // through the legacy interop layer.
+  updateCoordinates(coordinates: LatLng[]) {
+    if (!this.polyline.current) return;
+    PolylineCommands.updateCoordinates(
+      // @ts-ignore
+      this.polyline.current,
+      coordinates.map(c => `${c.latitude},${c.longitude}`).join(';'),
+    );
   }
 
   render() {
