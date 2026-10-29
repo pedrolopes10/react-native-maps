@@ -307,6 +307,13 @@ public class MarkerManager extends ViewGroupManager<MapMarker> implements RNMaps
         view.setUpdated(true);
     }
 
+    // ANSY: the updateRotation command, so a marker can turn without a React render
+    @Override
+    public void updateRotation(MapMarker view, double rotation) {
+        view.setRotation((float) rotation);
+        view.setUpdated(true);
+    }
+
     // ANSY
     @Override
     public void setTop(MapMarker view, boolean value) {

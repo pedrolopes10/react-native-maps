@@ -497,6 +497,19 @@ export class MapMarker extends React.Component<MapMarkerProps> {
     }
   }
 
+  // ANSY: turn the marker natively, in degrees, without a React render. The
+  // `rotation` prop wins again on the next render that changes it.
+  updateRotation(rotation: number) {
+    if (this.marker.current) {
+      if (this.fabricMarker) {
+        // @ts-ignore
+        FabricCommands.updateRotation(this.marker.current, rotation);
+      } else {
+        this.setNativeProps({rotation} as Partial<NativeProps>);
+      }
+    }
+  }
+
   render() {
     const {stopPropagation = false} = this.props;
     if (this.fabricMarker === undefined) {

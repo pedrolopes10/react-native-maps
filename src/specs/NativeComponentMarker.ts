@@ -335,6 +335,12 @@ export interface NativeCommands {
   hideCallout: (viewRef: React.ElementRef<React.ComponentType>) => void;
   redrawCallout: (viewRef: React.ElementRef<React.ComponentType>) => void;
   redraw: (viewRef: React.ElementRef<React.ComponentType>) => void;
+  // ANSY: rotate without a React render. Not `setRotation`: on Android that
+  // name is taken by the generated setter of the `rotation` prop.
+  updateRotation: (
+    viewRef: React.ElementRef<React.ComponentType>,
+    rotation: Double,
+  ) => void;
 }
 
 export const Commands: NativeCommands = codegenNativeCommands<NativeCommands>({
@@ -345,6 +351,7 @@ export const Commands: NativeCommands = codegenNativeCommands<NativeCommands>({
     'hideCallout',
     'redrawCallout',
     'redraw',
+    'updateRotation',
   ],
 });
 

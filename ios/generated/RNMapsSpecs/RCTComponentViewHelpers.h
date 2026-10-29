@@ -456,6 +456,7 @@ if ([commandName isEqualToString:@"setIndoorActiveLevelIndex"]) {
 - (void)hideCallout;
 - (void)redrawCallout;
 - (void)redraw;
+- (void)updateRotation:(double)rotation;
 @end
 
 RCT_EXTERN inline void RCTRNMapsMarkerHandleCommand(
@@ -580,6 +581,26 @@ if ([commandName isEqualToString:@"redraw"]) {
   
 
   [componentView redraw];
+  return;
+}
+
+if ([commandName isEqualToString:@"updateRotation"]) {
+#if RCT_DEBUG
+  if ([args count] != 1) {
+    RCTLogError(@"%@ command %@ received %d arguments, expected %d.", @"RNMapsMarker", commandName, (int)[args count], 1);
+    return;
+  }
+#endif
+
+  NSObject *arg0 = args[0];
+#if RCT_DEBUG
+  if (!RCTValidateTypeOfViewCommandArgument(arg0, [NSNumber class], @"double", @"RNMapsMarker", commandName, @"1st")) {
+    return;
+  }
+#endif
+  double rotation = [(NSNumber *)arg0 doubleValue];
+
+  [componentView updateRotation:rotation];
   return;
 }
 

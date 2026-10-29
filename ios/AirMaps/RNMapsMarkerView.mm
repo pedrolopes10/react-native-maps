@@ -99,6 +99,12 @@ using namespace facebook::react;
     [_view setRotation:newRotationInDegrees];
 }
 
+// ANSY: the updateRotation command, so a marker can turn without a React render
+- (void) updateRotation:(double)rotation
+{
+    [_view setRotation:rotation];
+}
+
 - (void) prepareMarkerView
 {
     if (_legacyMapManager && _view) return;

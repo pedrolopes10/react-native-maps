@@ -42,4 +42,5 @@ public interface RNMapsMarkerManagerInterface<T extends View> extends ViewManage
   void hideCallout(T view);
   void redrawCallout(T view);
   void redraw(T view);
+  void updateRotation(T view, double rotation);
 }
