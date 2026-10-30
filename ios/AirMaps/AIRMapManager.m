@@ -28,6 +28,7 @@
 #import "AIRMapSnapshot.h"
 #import "RCTConvert+AirMap.h"
 #import "AIRMapOverlay.h"
+#import "AIRMapTrails.h"
 #import <MapKit/MapKit.h>
 
 #define IS_OS_11_OR_LATER ([[[UIDevice currentDevice] systemVersion] floatValue] >= 11.0)
@@ -969,6 +970,8 @@ RCT_EXPORT_METHOD(getAddressFromCoordinates:(nonnull NSNumber *)reactTag
         return ((AIRMapLocalTile *)overlay).renderer;
     } else if ([overlay isKindOfClass:[AIRMapOverlay class]]) {
         return ((AIRMapOverlay *)overlay).renderer;
+    } else if ([overlay isKindOfClass:[AIRMapTrails class]]) {
+        return ((AIRMapTrails *)overlay).renderer;
     } else if([overlay isKindOfClass:[MKTileOverlay class]]) {
         return [[MKTileOverlayRenderer alloc] initWithTileOverlay:overlay];
     } else {

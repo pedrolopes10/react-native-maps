@@ -14,6 +14,8 @@ export type {MapOverlayProps} from './MapOverlay';
 
 export {default as Polyline, MapPolyline} from './MapPolyline';
 export type {MapPolylineProps} from './MapPolyline';
+export {default as Trails, MapTrails} from './MapTrails';
+export type {MapTrailsProps, MapTrail, MapTrailTip} from './MapTrails';
 export {default as Heatmap, MapHeatmap} from './MapHeatmap';
 export type {MapHeatmapProps} from './MapHeatmap';
 export {default as Polygon, MapPolygon} from './MapPolygon';
