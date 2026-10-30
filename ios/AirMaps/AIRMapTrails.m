@@ -172,7 +172,8 @@ static AIRMapTrailPath *AIRTrailPathMake(const MKMapPoint *points, NSUInteger co
 {
     AIRMapTrails *trails = (AIRMapTrails *)self.overlay;
     NSArray<AIRMapTrailPath *> *paths = [trails snapshot];
-    CGFloat width = trails.strokeWidth / zoomScale;
+    // doubled like AIRMapPolylineRenderer's, so a strokeWidth draws as wide as a Polyline's
+    CGFloat width = (trails.strokeWidth / zoomScale) * 2.0;
     // a line's width reaches past its points: draw what crosses into the tile
     MKMapRect area = MKMapRectInset(mapRect, -width * 2, -width * 2);
 
