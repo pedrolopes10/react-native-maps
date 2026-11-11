@@ -223,6 +223,33 @@ public class MapPolyline extends MapFeature {
             return;
         }
         this.polylineOptions = new ArrayList<>(coordinates.size());
+
+        // ANSY: a line with no colour per point is ONE polyline. Cut into a
+        // piece per pair of points like the coloured ones, only the last piece
+        // followed the later setPoints calls (updateCoordinates, a "single"
+        // syncedCoordsColors) and the others stayed where they were created: a
+        // line that got three points or more before it was added to the map
+        // left stubs behind.
+        boolean colourPerPoint = strokeColors != null && strokeColors.size() > 0
+                && strokeColors.size() == coordinates.size();
+        if (!colourPerPoint) {
+            if (coordinates.size() < 2) {
+                return;
+            }
+            PolylineOptions options = new PolylineOptions();
+            options.addAll(coordinates);
+            options.color(color);
+            options.width(width);
+            options.geodesic(geodesic);
+            options.zIndex(zIndex);
+            if (lineDashPatternDash != null) {
+                options.pattern(Arrays.<PatternItem>asList(
+                        new Dash(this.lineDashPatternDash), new Gap(this.lineDashPatternGap)));
+            }
+            this.polylineOptions.add(options);
+            return;
+        }
+
         for (int i = 0; i < coordinates.size()-1; i++) {
             PolylineOptions options = new PolylineOptions();
 
