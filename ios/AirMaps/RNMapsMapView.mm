@@ -49,6 +49,16 @@ using namespace facebook::react;
 - (void) prepareForRecycle
 {
     [super prepareForRecycle];
+    // Bring the base view back to its defaults before the next map takes it.
+    // prepareMapView starts every reuse from default props, and
+    // RCTViewComponentView diffs against its own _props: without this, anything
+    // the last user set on the view itself (transform, opacity, background,
+    // pointerEvents...) is never diffed away and shows on the next map.
+    // _view is only set once prepareMapView has run, so _props is ours by then.
+    if (_view) {
+        static const auto defaultProps = std::make_shared<const RNMapsMapViewProps>();
+        [super updateProps:defaultProps oldProps:_props];
+    }
     [_view removeFromSuperview];
     _view = nil;
     _legacyMapManager = nil;
